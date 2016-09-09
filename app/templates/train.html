@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MMR arthistory project - Training</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body>
+
+  <div class="container-fluid text-center">
+    <div class="page-header">
+      <h1>Train the algorithm by indicating how similar the two paintings are</h1>
+    </div>
+    <div id="maquetteapp">
+    </div>
+  </div>
+
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/maquette/2.1.6/maquette.min.js"></script>
+  <script>
+    var h = maquette.h;
+    var projector = maquette.createProjector();
+
+    var state = {
+      'img1': 'https://afremov.com/image.php?type=P&id=19095',
+      'img2': 'http://www.thisiscolossal.com/wp-content/uploads/2016/03/finger-4.jpg',
+      'alert': '',
+    };
+
+    function sendRating(evt) {
+      //TODO
+      // If error
+      state.alert = 'Value '+ evt.target.value;
+    }
+
+    function renderMaquette() {
+      return h('row', [
+        h('div.col-md-5.center-block', h('img.img-responsive', {'src': state.img1})),
+        h('div.col-md-2', [
+          h('div.btn-group.btn-group-lg.btn-group-vertical', [
+            h('button.btn.btn-default', {onclick: sendRating, value:2}, "Very similar"),
+            h('button.btn.btn-default', {onclick: sendRating, value:1}, "Quite similar"),
+            h('button.btn.btn-default', {onclick: sendRating, value:0}, "Not similar"),
+          ]),
+          state.alert ? h('div.alert.alert-danger', state.alert) : '',
+        ]),
+        h('div.col-md-5.center-block', h('img.img-responsive', {'src': state.img2})),
+      ]);
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      projector.append(document.getElementById("maquetteapp"), renderMaquette);
+    });
+  </script>
+</body>
+</html>
