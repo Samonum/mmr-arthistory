@@ -4,6 +4,41 @@ import unittest
 # FUNCTIONS
 ################################################################################
 
+def rgbToHsv(rgb):
+	"""
+	Converts an array with RGB values to HSV values
+	"""
+	rgb = [c/255.0 for c in rgb]
+	
+	maxi = 0 if rgb[0] > rgb[1] else 1
+	maxi = maxi if rgb[maxi] > rgb[2] else 2
+	
+	mini = 0 if rgb[0] < rgb[1] else 1
+	mini = mini if rgb[maxi] < rgb[2] else 2
+	
+	d = rgb[maxi] - rgb[mini]
+	hsv = [0] * 3
+	
+	#Black means all 0 even in HSV
+	if rgb[maxi] == 0:
+		return hsv
+		
+	hsv[2] = rgb[maxi]
+	
+	#Gray means no hue or saturation
+	if d == 0:
+		return hsv
+		
+	if maxi == 0:
+		hsv[0] = 60 * (((rgb[1] - rgb[2]) / d) % 6)
+	elif maxi == 1:
+		hsv[0] = 60 * ((rgb[2] - rgb[0]) / d + 2)
+	else:
+		hsv[0] = 60 * ((rgb[0] - rgb[1]) / d + 4)
+	
+	hsv[1] = d/rgb[maxi]
+	return hsv
+
 def huecount(num):
     """
     This is a docstring, it tells something about the function when you
