@@ -51,8 +51,8 @@ def huecount(image):
 class TestColorFeatures(unittest.TestCase):
 
     def test_hue(self):
-        """Should output correct hue count"""
-        img = cv2.imread("opencv-logo.png")
+        """Should output correct hue count, for the given image 4"""
+        img = cv2.imread("test\opencv-logo.png")
         count = huecount(img)
         print(count)
         self.assertEqual(count, 4)
