@@ -6,7 +6,7 @@ import os
 ################################################################################
 # FUNCTIONS
 ################################################################################
-def huecount(image):
+def huefeatures(image):
     """
     Function that returns the amount of different colours detected within the image.
 
@@ -19,20 +19,20 @@ def huecount(image):
     """
     #Algorithm parameters
     #Note that in OpenCV HSV uses the ranges [0,179], [0,255] and [0,255] respectively
-    saturationThreshold = .2 * 255
-    minValue = .15 * 255
-    maxValue = .95 * 255
+    saturationThreshold = (int)(.2 * 255)
+    minValue = (int)(.15 * 255)
+    maxValue = (int)(.95 * 255)
     noiseThreshold = .05
 
     #Convert image
-    hsvimg = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    hsvimg = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
     histogram = [0] * 21
 
     #Loop over all pixels
     for row in hsvimg:
         for hsvpx in row:
             #If not greyscale
-            if hsvpx[1] > saturationThreshold or minValue < hsvpx[2] < maxValue:
+            if hsvpx[2] > saturationThreshold or minValue < hsvpx[1] < maxValue:
                 histogram[hsvpx[0] // 9] += 1
             #Else
             else:
@@ -40,7 +40,7 @@ def huecount(image):
 
     #Return the number of colours that pass the threshold (threshold relative to max count)
     maxColor = max(histogram)
-    return len([x for x in histogram if x > maxColor * noiseThreshold])
+    return [len([x for x in histogram if x > maxColor * noiseThreshold]),(histogram.index(maxColor)*9)+10, maxColor]
 
 
 ################################################################################
@@ -56,7 +56,7 @@ class TestColorFeatures(unittest.TestCase):
         thispath = os.path.dirname(__file__)
         impath = os.path.join("test", "opencv-logo.png")
         img = cv2.imread(os.path.join(thispath, impath))
-        count = huecount(img)
+        count = huefeatures(img)[0]
         self.assertEqual(count, 4)
         # ... and then evaluate the output
 
