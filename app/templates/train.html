@@ -4,52 +4,92 @@
   <title>MMR arthistory project - Training</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="{{url_for('static', filename='animate.css')}}" rel="stylesheet"/>
+
+  <style>
+    /* Custom CSS */
+    /*html, body, #app {
+      height: 100%;
+      min-height: 100%;
+      max-height: 100%;
+    }*/
+    .list-enter-active, .list-leave-active {
+  transition: all 1s;
+}
+.list-enter, .list-leave-active {
+  opacity: 0;
+  transform: translateY(30px);
+}
+  </style>
 </head>
 <body>
 
-  <div class="container-fluid text-center">
-    <div class="page-header">
-      <h1>Train the algorithm by indicating how similar the two paintings are</h1>
-    </div>
-    <div id="maquetteapp">
+{# Disable interpretation of tags as Vue has same syntax #}
+{% raw %}
+  <div id="app">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-xs-10"></div>
+        <div clas="col-xs-2">
+          <img v-bind:src="mainimg" class="img-responsive img-thumbnail center-block">
+        </div>
+      </div>
+      <div class="row">
+        <button v-on:click="remove">Remove</button>
+        <transition-group name="custom-classes-transition"
+                          enter-active-class="animated fadeIn"
+                          leave-active-class="animated fadeOut"
+                          tag="div">
+          <div v-for="img in imgarr" v-bind:key="img" v-bind:class="'col-xs-' + imgncols">
+            <img v-bind:src="img" class="img-responsive img-thumbnail">
+          </div>
+        </transition-group>
+      </div>
     </div>
   </div>
+{% endraw %}
 
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/maquette/2.1.6/maquette.min.js"></script>
-  <script>
-    var h = maquette.h;
-    var projector = maquette.createProjector();
+  <script src="{{url_for('static', filename='vue.js')}}" type="text/javascript"></script>
 
-    var state = {
-      'img1': 'https://afremov.com/image.php?type=P&id=19095',
-      'img2': 'http://www.thisiscolossal.com/wp-content/uploads/2016/03/finger-4.jpg',
-      'alert': '',
-    };
+  <script type="text/javascript">
+  function ready() {
 
-    function sendRating(evt) {
-      //TODO
-      // If error
-      state.alert = 'Value '+ evt.target.value;
-    }
+    // Vue.transition('slide', {
+    //   enterClass: 'slideInUp',
+    //   leaveClass: 'slideOutDown'
+    // });
 
-    function renderMaquette() {
-      return h('row', [
-        h('div.col-md-5.center-block', h('img.img-responsive', {'src': state.img1})),
-        h('div.col-md-2', [
-          h('div.btn-group.btn-group-lg.btn-group-vertical', [
-            h('button.btn.btn-default', {onclick: sendRating, value:2}, "Very similar"),
-            h('button.btn.btn-default', {onclick: sendRating, value:1}, "Quite similar"),
-            h('button.btn.btn-default', {onclick: sendRating, value:0}, "Not similar"),
-          ]),
-          state.alert ? h('div.alert.alert-danger', state.alert) : '',
-        ]),
-        h('div.col-md-5.center-block', h('img.img-responsive', {'src': state.img2})),
-      ]);
-    }
-
-    document.addEventListener('DOMContentLoaded', function(){
-      projector.append(document.getElementById("maquetteapp"), renderMaquette);
+    var vm = new Vue({
+      el: '#app',
+      data: {
+        message: "Compare stuff",
+        mainimg: 'https://afremov.com/image.php?type=P&id=19095',
+        imgarr: [
+          'http://www.thisiscolossal.com/wp-content/uploads/2016/03/finger-4.jpg',
+          'https://s-media-cache-ak0.pinimg.com/236x/1b/8d/d5/1b8dd592b1ca8f9e1b1e01d31d822d9c.jpg',
+          'https://upload.wikimedia.org/wikipedia/commons/c/c5/Andreas_Achenbach_-_Clearing_Up%E2%80%94Coast_of_Sicily_-_Walters_37116.jpg',
+        ],
+      },
+      computed: {
+        imgncols: function() {
+          return Math.floor(12 / this.imgarr.length);
+        }
+      },
+      methods: {
+        randomIndex: function () {
+          return Math.floor(Math.random() * this.imgarr.length);
+        },
+        add: function () {
+          // this.items.splice(this.randomIndex(), 0, this.nextNum++);
+        },
+        remove: function() {
+          this.imgarr.splice(this.randomIndex(), 1);
+        },
+      }
     });
+    document.vm = vm;
+  }
+  document.addEventListener("DOMContentLoaded", ready, false);
   </script>
 </body>
 </html>
