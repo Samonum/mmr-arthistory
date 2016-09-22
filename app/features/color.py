@@ -1,24 +1,46 @@
 import unittest
+import cv2
+import math
 
 ################################################################################
 # FUNCTIONS
 ################################################################################
-
-def huecount(num):
+def huecount(image):
     """
-    This is a docstring, it tells something about the function when you
-    execute help(huecount). Three quotation marks enable multiline strings.
-
-    Currently this is a nonsense function for illustration purposes.
-
-    To calculate actual hue you can use the Pillow package (image I/O, calcs).
-    I googled a bit and there seems to be a 'posterize' function that reduces
-    the number of colors, then you'll only have to count the number of colors
-    remaining, possibly with a minimum treshold (e.g. at least 3 pixels of this
-    color).
-    http://pillow.readthedocs.io/en/3.1.x/reference/ImageOps.html#PIL.ImageOps.posterize
+    Function that returns the amount of different colours detected within the image.
+    
+    Takes a OpenCV image
+    Returns the number of different colours
+    
+    Feature from: 'The Design of High-Level Features for Photo Quality Assessment' by Y.Ke et al. (2006)
+    
+    Coded by Sam
     """
-    return num+8
+    #Algorithm parameters 
+    #Note that in OpenCV HSV uses the ranges [0,179], [0,255] and [0,255] respectively
+    saturationThreshold = .2 * 255
+    minValue = .15 * 255
+    maxValue = .95 * 255
+    noiseThreshold = .05
+    
+    #Convert image
+    hsvimg = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    histogram = [0] * 21
+    
+    #Loop over all pixels
+    for row in hsvimg:
+        for hsvpx in row:
+            #If not greyscale
+            if hsvpx[1] > saturationThreshold or minValue < hsvpx[2] < maxValue:
+                histogram[math.floor(hsvpx[0] / 9)] += 1
+            #Else
+            else:
+                histogram[20] += 1
+    
+    #Return the number of colours that pass the threshold (threshold relative to max count)
+    maxColor = max(histogram)
+    return len([x for x in histogram if x > maxColor * noiseThreshold])
+    
 
 ################################################################################
 # TESTS
@@ -29,11 +51,11 @@ def huecount(num):
 class TestColorFeatures(unittest.TestCase):
 
     def test_hue(self):
-        # Put in this test's docstring what this tested function should do
-        "Should output correct hue count"
-        # You should load the image here
-        # Then pass it to function...
-        self.assertEqual(huecount(34), 42)
+        """Should output correct hue count, for the given image 4"""
+        img = cv2.imread("test\opencv-logo.png")
+        count = huecount(img)
+        print(count)
+        self.assertEqual(count, 4)
         # ... and then evaluate the output
 
 # This if statement gets executed when you run this file, so > python color.py
