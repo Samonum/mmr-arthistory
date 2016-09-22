@@ -2,10 +2,37 @@ import unittest
 import cv2
 import math
 import os
+import numpy
 
 ################################################################################
 # FUNCTIONS
 ################################################################################
+def generateHlsHistogram(hlsimg):
+    """
+    Generates a histogram based on the given HLS image.
+    The histogram contains 20 bins for different hue values and 1 bin for greyscale.
+    """
+    #Algorithm parameters
+    #Note that in OpenCV hls uses the ranges [0,179], [0,255] and [0,255] respectively
+    saturationThreshold = (int)(.2 * 255)
+    minLightness = (int)(.15 * 255)
+    maxLightness = (int)(.95 * 255)
+    
+    
+    histogram = [0] * 21
+    [width, height, depth] = hlsimg.shape
+    
+    for y in range(0, height):
+        for x in range(0, width):
+            #If not greyscale
+            if hlsimg.item(x, y, 2) > saturationThreshold or minLightness < hlsimg.item(x, y, 1) < maxLightness:
+                histogram[hlsimg.item(x, y, 0) // 9] += 1
+            #Else
+            else:
+                histogram[20] += 1
+    return histogram
+
+
 def huefeatures(image):
     """
     Function that returns the amount of different colours detected within the image.
@@ -18,25 +45,11 @@ def huefeatures(image):
     Coded by Sam
     """
     #Algorithm parameters
-    #Note that in OpenCV HSV uses the ranges [0,179], [0,255] and [0,255] respectively
-    saturationThreshold = (int)(.2 * 255)
-    minValue = (int)(.15 * 255)
-    maxValue = (int)(.95 * 255)
     noiseThreshold = .05
 
     #Convert image
-    hsvimg = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
-    histogram = [0] * 21
-
-    #Loop over all pixels
-    for row in hsvimg:
-        for hsvpx in row:
-            #If not greyscale
-            if hsvpx[2] > saturationThreshold or minValue < hsvpx[1] < maxValue:
-                histogram[hsvpx[0] // 9] += 1
-            #Else
-            else:
-                histogram[20] += 1
+    hlsimg = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
+    histogram = generateHlsHistogram(hlsimg)
 
     #Return the number of colours that pass the threshold (threshold relative to max count)
     maxColor = max(histogram)
