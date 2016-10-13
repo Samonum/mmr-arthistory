@@ -3,93 +3,148 @@
 <head>
   <title>MMR arthistory project - Training</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="{{url_for('static', filename='animate.css')}}" rel="stylesheet"/>
 
   <style>
-    /* Custom CSS */
-    /*html, body, #app {
-      height: 100%;
-      min-height: 100%;
-      max-height: 100%;
-    }*/
-    .list-enter-active, .list-leave-active {
-  transition: all 1s;
-}
-.list-enter, .list-leave-active {
-  opacity: 0;
-  transform: translateY(30px);
-}
+  /* Flexbox layout */
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #55616F;
+  }
+  .imgframe {
+    padding-left: 20%;
+    padding-right: 20%;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  .container {
+    height: 100%;
+    /*width: 100%;*/
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+  }
+  .leftcol, .rightcol {
+    flex: 0 0 40%;
+  }
+  .midcol {
+    flex: 0 0 20%;
+  }
   </style>
 </head>
 <body>
 
-{# Disable interpretation of tags as Vue has same syntax #}
+{# Use raw for jinja2 escaping! #}
 {% raw %}
-  <div id="app">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-xs-10"></div>
-        <div clas="col-xs-2">
-          <img v-bind:src="mainimg" class="img-responsive img-thumbnail center-block">
-        </div>
-      </div>
-      <div class="row">
-        <button v-on:click="remove">Remove</button>
-        <transition-group name="custom-classes-transition"
-                          enter-active-class="animated fadeIn"
-                          leave-active-class="animated fadeOut"
-                          tag="div">
-          <div v-for="img in imgarr" v-bind:key="img" v-bind:class="'col-xs-' + imgncols">
-            <img v-bind:src="img" class="img-responsive img-thumbnail">
+  <div id="app" class="container">
+        <div class="leftcol">
+          <div class="imgframe">
+            <img v-if="show" v-bind:src="'/api'+mainimg.afbeelding">
           </div>
-        </transition-group>
-      </div>
-    </div>
+        </div>
+        <div class="rightcol">
+          <div class="imgframe">
+            <img v-if="show" v-bind:src="'/api'+similarimg.afbeelding">
+          </div>
+        </div>
+        <div class="midcol">
+          <span v-if="show">Timer: {{ timer.toFixed(0) }}s</span>
+          <br><br>
+          {{ message }}
+        </div>
   </div>
 {% endraw %}
 
-  <script src="{{url_for('static', filename='vue.js')}}" type="text/javascript"></script>
+<script src="https://unpkg.com/axios@0.12.0/dist/axios.min.js"></script>
+<script src="https://unpkg.com/lodash@4.13.1/lodash.min.js"></script>
+<script src="{{url_for('static', filename='vue.js')}}" type="text/javascript"></script>
 
-  <script type="text/javascript">
-  function ready() {
+<script type="text/javascript">
+function ready() {
 
-    // Vue.transition('slide', {
-    //   enterClass: 'slideInUp',
-    //   leaveClass: 'slideOutDown'
-    // });
-
-    var vm = new Vue({
-      el: '#app',
-      data: {
-        message: "Compare stuff",
-        mainimg: 'https://afremov.com/image.php?type=P&id=19095',
-        imgarr: [
-          'http://www.thisiscolossal.com/wp-content/uploads/2016/03/finger-4.jpg',
-          'https://s-media-cache-ak0.pinimg.com/236x/1b/8d/d5/1b8dd592b1ca8f9e1b1e01d31d822d9c.jpg',
-          'https://upload.wikimedia.org/wikipedia/commons/c/c5/Andreas_Achenbach_-_Clearing_Up%E2%80%94Coast_of_Sicily_-_Walters_37116.jpg',
-        ],
+  var vm = new Vue({
+    el: '#app',
+    data: {
+      settings: {
+        showsecs: 10,
       },
-      computed: {
-        imgncols: function() {
-          return Math.floor(12 / this.imgarr.length);
+
+      message: "Please compare the paintings you are about to see.",
+
+      mainimg: {},
+      similarimg: {},
+
+      show: false,
+      timer: 0,
+    },
+    computed: {
+      // Returns 0 if everything is all right, >0 otherwise
+      messageSeverity: function() {
+        return this.message.toLowerCase().indexOf('error') !== -1 ? 1 : 0;
+      },
+    },
+    methods: {
+      updateTimer: function() {
+        var elapsed = new Date().getTime() / 1000 - this.starttime;
+        this.timer = this.settings.showsecs - elapsed;
+        // Hide if done
+        if (elapsed >= this.settings.showsecs) {
+          this.show = false;
+        // If not done, count down some more
+        } else {
+          window.setTimeout(this.updateTimer, 100);
         }
       },
-      methods: {
-        randomIndex: function () {
-          return Math.floor(Math.random() * this.imgarr.length);
-        },
-        add: function () {
-          // this.items.splice(this.randomIndex(), 0, this.nextNum++);
-        },
-        remove: function() {
-          this.imgarr.splice(this.randomIndex(), 1);
-        },
-      }
-    });
-    document.vm = vm;
-  }
-  document.addEventListener("DOMContentLoaded", ready, false);
-  </script>
+      // Hide painting after timer elapses
+      startTimer: function() {
+        // Seconds since epoch
+        this.starttime = new Date().getTime() / 1000;
+        this.updateTimer();
+      },
+      vote: function() {
+        // Hide paintings, display message
+        // Send vote to API, check if success
+        // Load new paintings
+        this.loadAndShow();
+      },
+      loadAndShow: function() {
+        // Promises!
+        this.getMainPainting().then(this.getSimilarPainting)
+        .then(() => {
+          this.show = true;
+          this.startTimer();
+        });
+      },
+      getMainPainting: function() {
+        return axios.get('/api/get_random_painting')
+        .then((response) => {
+          this.mainimg = response.data;
+          return this.mainimg;
+        }).catch((error) => {
+          this.message = "Error loading main painting!";
+        });
+      },
+      getSimilarPainting: function(paintingobj) {
+        // Send painting object so backend can compare on whatever attribute
+        return axios.post('/api/get_similar_painting', paintingobj)
+        .then((response) => {
+          this.similarimg = response.data;
+        }).catch((error) => {
+          this.message = "Error loading similar paintings!";
+        });
+      },
+    }
+  });
+
+  vm.loadAndShow();
+
+  document.vm = vm;
+}
+document.addEventListener("DOMContentLoaded", ready, false);
+</script>
 </body>
 </html>
