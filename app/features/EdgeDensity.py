@@ -24,8 +24,8 @@ def CalNonBlackPixels(image):
     rows, cols, channels = image.shape
 
     #The iteration for finding non-black pixels
-    for i in xrange(rows):
-        for j in xrange(cols):
+    for i in range(rows):
+        for j in range(cols):
             #Access each channel of a pixel
             k1 = image.item(i,j,0)
             k2 = image.item(i,j,1)
@@ -57,7 +57,7 @@ class TestNonBlackPixelFeatures(unittest.TestCase):
         impath = os.path.join("test", "lady.png")
         img = cv2.imread(os.path.join(thispath, impath))
         ratio = CalNonBlackPixels(img)
-        print "The ratio of non-black region is %.2f%%" % ratio
+        print("The ratio of non-black region is %.2f%%" % ratio)
 
 # This if statement gets executed when you run this file, so > python color.py
 if __name__ == '__main__':
