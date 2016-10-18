@@ -121,6 +121,7 @@ function ready() {
         this.updateTimer();
       },
       vote: function(ev) {
+        if (!ev.target.value) return;
         // Hide, display message
         this.showbuttons = false;
         this.show = false;

@@ -7,6 +7,9 @@ import os
 import random
 from tinydb import TinyDB, where
 import datetime
+import logging
+
+logging.basicConfig(filename='log.txt', level=logging.DEBUG)
 
 db = TinyDB(os.path.join(os.getcwd(), 'results.json'))
 
@@ -59,7 +62,7 @@ def vote():
     similarimgindex = j['similarimg']['index']
     votevalue = j['votevalue']
     timestamp = datetime.datetime.now()
-    print("\n\nAt {:%Y-%m-%d %H:%M} images #{} and #{} were compared by {} and given value {}\n\n"
+    logging.info("\n\nAt {:%Y-%m-%d %H:%M} images #{} and #{} were compared by {} and given value {}\n\n"
     .format(timestamp, mainimgindex, similarimgindex, compare_by, votevalue))
     db.insert(dict(j, timestamp=timestamp.isoformat()))
     return json.dumps({'msg': "Vote received!"})
