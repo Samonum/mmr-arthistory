@@ -1,3 +1,4 @@
 flask
 fabric
 xmltodict
+simpledb

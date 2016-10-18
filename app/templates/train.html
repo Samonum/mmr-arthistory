@@ -34,6 +34,9 @@
   .midcol {
     flex: 0 0 20%;
   }
+  .midcolinside {
+    margin-right: 100px;
+  }
   </style>
 </head>
 <body>
@@ -52,15 +55,24 @@
           </div>
         </div>
         <div class="midcol">
-          <span v-if="show">Timer: {{ timer.toFixed(0) }}s</span>
-          <br><br>
-          {{ message }}
+          <div class="midcolinside">
+            <span v-if="show">Timer: {{ timer.toFixed(0) }}s</span>
+            <br><br>
+            {{ message }}
+            <br><br>
+            <div v-if="showbuttons" class="vote" v-on:click="vote">
+              <button value='3'>Very similar</button><br>
+              <button value='2'>Similar</button><br>
+              <button value='1'>Not similar</button><br><br>
+              <button value='0'>I don't know</button><br>
+            </div>
+          <div>
         </div>
   </div>
 {% endraw %}
 
 <script src="https://unpkg.com/axios@0.12.0/dist/axios.min.js"></script>
-<script src="https://unpkg.com/lodash@4.13.1/lodash.min.js"></script>
+<!-- <script src="https://unpkg.com/lodash@4.13.1/lodash.min.js"></script> -->
 <script src="{{url_for('static', filename='vue.js')}}" type="text/javascript"></script>
 
 <script type="text/javascript">
@@ -73,12 +85,13 @@ function ready() {
         showsecs: 10,
       },
 
-      message: "Please compare the paintings you are about to see.",
+      message: "",
 
       mainimg: {},
       similarimg: {},
 
       show: false,
+      showbuttons: false,
       timer: 0,
     },
     computed: {
@@ -96,6 +109,8 @@ function ready() {
           this.show = false;
         // If not done, count down some more
         } else {
+          // NOTE: this will run more times if voted before time elapses,
+          //       but that's not really a problem
           window.setTimeout(this.updateTimer, 100);
         }
       },
@@ -105,9 +120,19 @@ function ready() {
         this.starttime = new Date().getTime() / 1000;
         this.updateTimer();
       },
-      vote: function() {
-        // Hide paintings, display message
+      vote: function(ev) {
+        // Hide, display message
+        this.showbuttons = false;
+        this.show = false;
         // Send vote to API, check if success
+        var j = {
+          'mainimg': this.mainimg,
+          'similarimg': this.similarimg,
+          'votevalue': ev.target.value,
+        };
+        axios.post('/api/vote', j).then((response)=>{
+          this.message = response.data.msg;
+        });
         // Load new paintings
         this.loadAndShow();
       },
@@ -115,7 +140,9 @@ function ready() {
         // Promises!
         this.getMainPainting().then(this.getSimilarPainting)
         .then(() => {
+          // TODO: Wait for img src load!
           this.show = true;
+          this.showbuttons = true;
           this.startTimer();
         });
       },
@@ -123,6 +150,7 @@ function ready() {
         return axios.get('/api/get_random_painting')
         .then((response) => {
           this.mainimg = response.data;
+          this.message = response.data.msg;
           return this.mainimg;
         }).catch((error) => {
           this.message = "Error loading main painting!";

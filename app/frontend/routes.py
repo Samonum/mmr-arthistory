@@ -4,6 +4,11 @@ from ..utils import get_tree, dist
 import random
 from flask import json, send_file, request
 import os
+import random
+from tinydb import TinyDB, where
+import datetime
+
+db = TinyDB(os.path.join(os.getcwd(), 'results.json'))
 
 @showoffapp.route("/")
 def index():
@@ -17,12 +22,18 @@ def train():
 # API
 ################################################################################
 
+def compare_by():
+    if random.randint(0,1):
+        return {'compare_by': 'color', 'msg': "Compare the two paintings based on color."}
+    else:
+        return {'compare_by': 'texture', 'msg': "Compare the two paintings based on texture."}
+
 @api.route("/get_random_painting")
 def get_random_painting():
     tree = get_tree()
     i = random.randint(0, len(tree)-1)
     # Add index for easy retrieval later
-    return json.dumps(dict(tree[i], index=i))
+    return json.dumps(dict(**tree[i], **compare_by(), index=i))
 
 @api.route("/schilderijen/<int:n>.jpg")
 def get_painting_img(n):
@@ -31,9 +42,24 @@ def get_painting_img(n):
 
 @api.route("/get_similar_painting", methods=["POST"])
 def get_similar_painting():
-    # Get index that we added at get_random_painting()
     j = request.get_json()
+    # Get index that we added at get_random_painting()
     j['index']
-    # Calculate distance to all other paintings
-    # Sort and return best n
+    # TODO: Calculate distance to all other paintings
+    j['compare_by']
+    # TODO: Sort and return best n
     return get_random_painting()
+
+@api.route("/vote", methods=["POST"])
+def vote():
+    j = request.get_json()
+    # Process vote and send to db
+    compare_by = j['mainimg']['compare_by']
+    mainimgindex = j['mainimg']['index']
+    similarimgindex = j['similarimg']['index']
+    votevalue = j['votevalue']
+    timestamp = datetime.datetime.now()
+    print("\n\nAt {:%Y-%m-%d %H:%M} images #{} and #{} were compared by {} and given value {}\n\n"
+    .format(timestamp, mainimgindex, similarimgindex, compare_by, votevalue))
+    db.insert(dict(j, timestamp=timestamp.isoformat()))
+    return json.dumps({'msg': "Vote received!"})
