@@ -7,6 +7,7 @@ import numpy
 ################################################################################
 # FUNCTIONS
 ################################################################################
+
 class ColorFeatureExtracter:
     _hlsHistogram = 0
     _opencvimg = 0
@@ -15,17 +16,17 @@ class ColorFeatureExtracter:
     _rgbAvrg = 0
     _rgbStd = 0
     _bitmap = 0
-    
+
     def __init__(self, opencvimage):
         self._opencvimg = opencvimage
-    
+
     #THE method to call for All your colour related features!
     def ComputeFeatures(self):
         res = {}
         res['ColorBitmap']  = self.ColorBitmap()
         res['RgbHist']      = self.RgbHistogram()
         return res
-    
+
     #depricated
     def HlsHistogram(self):
         """
@@ -40,11 +41,11 @@ class ColorFeatureExtracter:
         saturationThreshold = (int)(.2 * 255)
         minLightness = (int)(.15 * 255)
         maxLightness = (int)(.95 * 255)
-        
-        
+
+
         histogram = [0] * 21
         [width, height, depth] = hlsimg.shape
-        
+
         for y in range(height):
             for x in range(width):
                 #If not greyscale
@@ -53,15 +54,15 @@ class ColorFeatureExtracter:
                 #Else
                 else:
                     histogram[20] += 1
-        
+
         self._hlsHistogram = histogram
         return histogram
-    
+
     def HlsImage(self):
         if not self._hlsimg:
             self._hlsimg = cv2.cvtColor(self._opencvimg, cv2.COLOR_BGR2HLS)
         return self._hlsimg
-        
+
     #depricated
     def HueCount(self):
         #Algorithm parameters
@@ -70,12 +71,12 @@ class ColorFeatureExtracter:
         histogram = self.HlsHistogram()
         maxColor = max(histogram)
         return len([x for x in histogram if x > maxColor * noiseThreshold])
-        
+
     #depricated
     def MostCommonColor(self):
         histogram = HlsHistogram()
         return histogram.index(max(histogram))
-        
+
     def RgbHistogram(self):
         """
         Generates a RGB histogram based on the given image.
@@ -84,7 +85,7 @@ class ColorFeatureExtracter:
             return self._rgbHistogram
         [width, height, depth] = self._opencvimg.shape
         histogram = [[0]*16,[0]*16, [0]*16]
-        
+
         for y in range(0, height):
             for x in range(0, width):
                 for i in range(0, depth):
@@ -92,7 +93,7 @@ class ColorFeatureExtracter:
         histogram = list(map(lambda rgb: list(map(lambda x: x/(width*height), rgb)), histogram))
         self._rgbHistogram = histogram
         return histogram
-    
+
     def RgbAverages(self):
         if not self._rgbAvrg is 0:
             return self._rgbAvrg
@@ -100,7 +101,7 @@ class ColorFeatureExtracter:
         total = numpy.sum(flatrgb, axis=0)
         self._rgbAvrg = total / flatrgb.shape[0]
         return self._rgbAvrg
-        
+
     def RgbStandardDeviation(self):
         if not self._rgbStd is 0:
             return self._rgbStd
@@ -113,7 +114,7 @@ class ColorFeatureExtracter:
         numpy.sqrt(rgbStd, rgbStd)
         self._rgbStd = rgbStd
         return self._rgbStd
-        
+
     def BitMap(self):
         if not self._bitmap is 0:
             return self._bitmap
@@ -123,10 +124,11 @@ class ColorFeatureExtracter:
         bitmap = numpy.greater_equal(bitmapScaled, globAvrg)
         self._bitmap = bitmap
         return bitmap
-    
+
     def ColorBitmap(self):
         return {'bitmap': self.BitMap(), 'sd':self.RgbStandardDeviation(), 'avrg': self.RgbAverages()}
-        
+
+
 ################################################################################
 # TESTS
 ################################################################################
