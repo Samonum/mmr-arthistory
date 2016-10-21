@@ -32,7 +32,7 @@ class TestGLCMFeatures(unittest.TestCase):
     def test_GLCMFeatures(self):
         """Should output the designated features of GCLM"""
         thispath = os.path.dirname(__file__)
-        impath = os.path.join("test", "704.jpg")
+        impath = os.path.join("test", "lady.png")
         img = cv2.imread(os.path.join(thispath, impath))
         features = GLCMFeatures(img)
         print(features)
