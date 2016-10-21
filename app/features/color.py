@@ -42,11 +42,8 @@ class ColorFeatureExtracter:
     @staticmethod
     def CompareColorBitmap(map1, map2):
         res = numpy.linalg.norm(map1['sd'] - map2['sd'])
-        print(res)
         res += numpy.linalg.norm(map1['avrg'] - map2['avrg'])
-        print(res)
         res += numpy.sum(map1['bitmap'] != map2['bitmap'])/map1['bitmap'].shape[0]
-        print(res)
         res /= 3
         return res
         
