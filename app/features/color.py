@@ -2,45 +2,131 @@ import unittest
 import cv2
 import math
 import os
+import numpy
 
 ################################################################################
 # FUNCTIONS
 ################################################################################
-def huecount(image):
-    """
-    Function that returns the amount of different colours detected within the image.
 
-    Takes a OpenCV image
-    Returns the number of different colours
+class ColorFeatureExtracter:
+    _hlsHistogram = 0
+    _opencvimg = 0
+    _hlsimg = 0
+    _rgbHistogram = 0
+    _rgbAvrg = 0
+    _rgbStd = 0
+    _bitmap = 0
 
-    Feature from: 'The Design of High-Level Features for Photo Quality Assessment' by Y.Ke et al. (2006)
+    def __init__(self, opencvimage):
+        self._opencvimg = opencvimage
 
-    Coded by Sam
-    """
-    #Algorithm parameters
-    #Note that in OpenCV HSV uses the ranges [0,179], [0,255] and [0,255] respectively
-    saturationThreshold = .2 * 255
-    minValue = .15 * 255
-    maxValue = .95 * 255
-    noiseThreshold = .05
+    #THE method to call for All your colour related features!
+    def ComputeFeatures(self):
+        res = {}
+        res['ColorBitmap']  = self.ColorBitmap()
+        res['RgbHist']      = self.RgbHistogram()
+        return res
 
-    #Convert image
-    hsvimg = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    histogram = [0] * 21
+    #depricated
+    def HlsHistogram(self):
+        """
+        Generates a histogram based on the given HLS image.
+        The histogram contains 20 bins for different hue values and 1 bin for greyscale.
+        """
+        if self._hlsHistogram:
+            return self._hlsHistogram
+        hlsimg = self.HlsImage()
+        #Algorithm parameters
+        #Note that in OpenCV hls uses the ranges [0,179], [0,255] and [0,255] respectively
+        saturationThreshold = (int)(.2 * 255)
+        minLightness = (int)(.15 * 255)
+        maxLightness = (int)(.95 * 255)
 
-    #Loop over all pixels
-    for row in hsvimg:
-        for hsvpx in row:
-            #If not greyscale
-            if hsvpx[1] > saturationThreshold or minValue < hsvpx[2] < maxValue:
-                histogram[hsvpx[0] // 9] += 1
-            #Else
-            else:
-                histogram[20] += 1
 
-    #Return the number of colours that pass the threshold (threshold relative to max count)
-    maxColor = max(histogram)
-    return len([x for x in histogram if x > maxColor * noiseThreshold])
+        histogram = [0] * 21
+        [width, height, depth] = hlsimg.shape
+
+        for y in range(height):
+            for x in range(width):
+                #If not greyscale
+                if hlsimg.item(x, y, 2) > saturationThreshold or minLightness < hlsimg.item(x, y, 1) < maxLightness:
+                    histogram[hlsimg.item(x, y, 0) // 9] += 1
+                #Else
+                else:
+                    histogram[20] += 1
+
+        self._hlsHistogram = histogram
+        return histogram
+
+    def HlsImage(self):
+        if not self._hlsimg:
+            self._hlsimg = cv2.cvtColor(self._opencvimg, cv2.COLOR_BGR2HLS)
+        return self._hlsimg
+
+    #depricated
+    def HueCount(self):
+        #Algorithm parameters
+        noiseThreshold = .05
+
+        histogram = self.HlsHistogram()
+        maxColor = max(histogram)
+        return len([x for x in histogram if x > maxColor * noiseThreshold])
+
+    #depricated
+    def MostCommonColor(self):
+        histogram = HlsHistogram()
+        return histogram.index(max(histogram))
+
+    def RgbHistogram(self):
+        """
+        Generates a RGB histogram based on the given image.
+        """
+        if not self._rgbHistogram is 0:
+            return self._rgbHistogram
+        [width, height, depth] = self._opencvimg.shape
+        histogram = [[0]*16,[0]*16, [0]*16]
+
+        for y in range(0, height):
+            for x in range(0, width):
+                for i in range(0, depth):
+                    histogram[i][self._opencvimg.item(x, y, i)//16] += 1
+        histogram = list(map(lambda rgb: list(map(lambda x: x/(width*height), rgb)), histogram))
+        self._rgbHistogram = histogram
+        return histogram
+
+    def RgbAverages(self):
+        if not self._rgbAvrg is 0:
+            return self._rgbAvrg
+        flatrgb = self._opencvimg.reshape(-1, self._opencvimg.shape[-1])
+        total = numpy.sum(flatrgb, axis=0)
+        self._rgbAvrg = total / flatrgb.shape[0]
+        return self._rgbAvrg
+
+    def RgbStandardDeviation(self):
+        if not self._rgbStd is 0:
+            return self._rgbStd
+        flatrgb = self._opencvimg.reshape(-1, self._opencvimg.shape[-1])
+        rgbAvrg = self.RgbAverages()
+        rgbStd = flatrgb - rgbAvrg
+        rgbStd *= rgbStd
+        rgbStd /= flatrgb.shape[0]
+        rgbStd = numpy.sum(rgbStd, axis=0)
+        numpy.sqrt(rgbStd, rgbStd)
+        self._rgbStd = rgbStd
+        return self._rgbStd
+
+    def BitMap(self):
+        if not self._bitmap is 0:
+            return self._bitmap
+        bitmapScaled = cv2.resize(self._opencvimg, (10,10))
+        globAvrg = self.RgbAverages()
+        bitmap = numpy.empty((10,10,3))
+        bitmap = numpy.greater_equal(bitmapScaled, globAvrg)
+        self._bitmap = bitmap
+        return bitmap
+
+    def ColorBitmap(self):
+        return {'bitmap': self.BitMap(), 'sd':self.RgbStandardDeviation(), 'avrg': self.RgbAverages()}
 
 
 ################################################################################
@@ -56,8 +142,8 @@ class TestColorFeatures(unittest.TestCase):
         thispath = os.path.dirname(__file__)
         impath = os.path.join("test", "opencv-logo.png")
         img = cv2.imread(os.path.join(thispath, impath))
-        count = huecount(img)
-        self.assertEqual(count, 4)
+        colorextr = ColorFeatureExtracter(img)
+        print(colorextr.ComputeFeatures())
         # ... and then evaluate the output
 
 # This if statement gets executed when you run this file, so > python color.py
