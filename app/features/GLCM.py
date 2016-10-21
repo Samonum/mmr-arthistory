@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from skimage.color import rgb2gray
 from scipy.misc import imread
 from skimage.feature import greycomatrix, greycoprops
+
 def GLCMFeatures(image):
     """
     Function that calculate the gray level co-occurrence matrix of an image.
