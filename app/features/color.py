@@ -35,7 +35,21 @@ class ColorFeatureExtracter:
         for key in features1:
             if(key == "RgbHist"):
                 res[key] = cv2.compareHist(features1[key], features2[key], 3)
+            if(key == "ColorBitmap"):
+                res[key] = ColorFeatureExtracter.CompareColorBitmap(features1[key], features2[key])
         return res
+     
+    @staticmethod
+    def CompareColorBitmap(map1, map2):
+        res = numpy.linalg.norm(map1['sd'] - map2['sd'])
+        print(res)
+        res += numpy.linalg.norm(map1['avrg'] - map2['avrg'])
+        print(res)
+        res += numpy.sum(map1['bitmap'] != map2['bitmap'])/map1['bitmap'].shape[0]
+        print(res)
+        res /= 3
+        return res
+        
     
     #depricated
     def HlsHistogram(self):
@@ -109,7 +123,7 @@ class ColorFeatureExtracter:
             return self._rgbAvrg
         flatrgb = self._opencvimg.reshape(-1, self._opencvimg.shape[-1])
         total = numpy.sum(flatrgb, axis=0)
-        self._rgbAvrg = total / flatrgb.shape[0]
+        self._rgbAvrg = total / (flatrgb.shape[0]*256)
         return self._rgbAvrg
         
     def RgbStandardDeviation(self):
@@ -119,7 +133,7 @@ class ColorFeatureExtracter:
         rgbAvrg = self.RgbAverages()
         rgbStd = flatrgb - rgbAvrg
         rgbStd *= rgbStd
-        rgbStd /= flatrgb.shape[0]
+        rgbStd /= (flatrgb.shape[0] *128)
         rgbStd = numpy.sum(rgbStd, axis=0)
         numpy.sqrt(rgbStd, rgbStd)
         self._rgbStd = rgbStd
