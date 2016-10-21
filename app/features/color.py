@@ -7,6 +7,8 @@ import numpy
 ################################################################################
 # FUNCTIONS
 ################################################################################
+        
+                
 class ColorFeatureExtracter:
     _hlsHistogram = 0
     _opencvimg = 0
@@ -24,6 +26,15 @@ class ColorFeatureExtracter:
         res = {}
         res['ColorBitmap']  = self.ColorBitmap()
         res['RgbHist']      = self.RgbHistogram()
+        return res
+    
+    #THE method to call for All your colour related comparisons
+    @staticmethod
+    def CompareFeatures(features1, features2):
+        res = {}
+        for key in features1:
+            if(key == "RgbHist"):
+                res[key] = cv2.compareHist(features1[key], features2[key], 3)
         return res
     
     #depricated
@@ -90,8 +101,8 @@ class ColorFeatureExtracter:
                 for i in range(0, depth):
                     histogram[i][self._opencvimg.item(x, y, i)//16] += 1
         histogram = list(map(lambda rgb: list(map(lambda x: x/(width*height), rgb)), histogram))
-        self._rgbHistogram = histogram
-        return histogram
+        self._rgbHistogram = numpy.asarray(histogram, dtype=numpy.float32)
+        return self._rgbHistogram
     
     def RgbAverages(self):
         if not self._rgbAvrg is 0:
@@ -141,7 +152,8 @@ class TestColorFeatures(unittest.TestCase):
         impath = os.path.join("test", "opencv-logo.png")
         img = cv2.imread(os.path.join(thispath, impath))
         colorextr = ColorFeatureExtracter(img)
-        print(colorextr.ComputeFeatures())
+        
+        print(colorextr.CompareFeatures(colorextr.ComputeFeatures(),colorextr.ComputeFeatures()))
         # ... and then evaluate the output
 
 # This if statement gets executed when you run this file, so > python color.py
