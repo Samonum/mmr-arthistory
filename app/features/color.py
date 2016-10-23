@@ -1,3 +1,4 @@
+from __future__ import division
 import unittest
 import cv2
 import math
@@ -41,8 +42,8 @@ class ColorFeatureExtracter:
      
     @staticmethod
     def CompareColorBitmap(map1, map2):
-        res = numpy.linalg.norm(map1['sd'] - map2['sd'])
-        res += numpy.linalg.norm(map1['avrg'] - map2['avrg'])
+        res = numpy.linalg.norm(map1['sd'] - map2['sd'])/128
+        res += numpy.linalg.norm(map1['avrg'] - map2['avrg'])/256
         res += numpy.sum(map1['bitmap'] != map2['bitmap'])/map1['bitmap'].size
         res /= 3
         return res
@@ -67,8 +68,8 @@ class ColorFeatureExtracter:
         histogram = [0] * 21
         [width, height, depth] = hlsimg.shape
         
-        for y in range(height):
-            for x in range(width):
+        for y in xrange(height):
+            for x in xrange(width):
                 #If not greyscale
                 if hlsimg.item(x, y, 2) > saturationThreshold or minLightness < hlsimg.item(x, y, 1) < maxLightness:
                     histogram[hlsimg.item(x, y, 0) // 9] += 1
@@ -107,11 +108,11 @@ class ColorFeatureExtracter:
         [width, height, depth] = self._opencvimg.shape
         histogram = [[0]*16,[0]*16, [0]*16]
         
-        for y in range(0, height):
-            for x in range(0, width):
-                for i in range(0, depth):
+        for y in xrange(0, height):
+            for x in xrange(0, width):
+                for i in xrange(0, depth):
                     histogram[i][self._opencvimg.item(x, y, i)//16] += 1
-        histogram = list(map(lambda rgb: list(map(lambda x: x/(width*height), rgb)), histogram))
+        histogram = list(map(lambda rgb: list(map(lambda x: float(x)/(width*height), rgb)), histogram))
         self._rgbHistogram = numpy.asarray(histogram, dtype=numpy.float32)
         return self._rgbHistogram
     
@@ -120,7 +121,7 @@ class ColorFeatureExtracter:
             return self._rgbAvrg
         flatrgb = self._opencvimg.reshape(-1, self._opencvimg.shape[-1])
         total = numpy.sum(flatrgb, axis=0)
-        self._rgbAvrg = total / (flatrgb.shape[0]*256)
+        self._rgbAvrg = total / (flatrgb.shape[0])
         return self._rgbAvrg
         
     def RgbStandardDeviation(self):
@@ -129,10 +130,10 @@ class ColorFeatureExtracter:
         flatrgb = self._opencvimg.reshape(-1, self._opencvimg.shape[-1])
         rgbAvrg = self.RgbAverages()
         rgbStd = flatrgb - rgbAvrg
-        rgbStd *= rgbStd
-        rgbStd /= (flatrgb.shape[0] *128)
+        rgbStd = numpy.abs(rgbStd)
+        
         rgbStd = numpy.sum(rgbStd, axis=0)
-        numpy.sqrt(rgbStd, rgbStd)
+        rgbStd /= (flatrgb.shape[0])
         self._rgbStd = rgbStd
         return self._rgbStd
         
@@ -161,10 +162,13 @@ class TestColorFeatures(unittest.TestCase):
         """Should output correct hue count, for the given image 4"""
         thispath = os.path.dirname(__file__)
         impath = os.path.join("test", "opencv-logo.png")
-        img = cv2.imread(os.path.join(thispath, impath))
-        colorextr = ColorFeatureExtracter(img)
+        impath2 = os.path.join("test", "lady.png")
         
-        print(colorextr.CompareFeatures(colorextr.ComputeFeatures(),colorextr.ComputeFeatures()))
+        img = cv2.imread(os.path.join(thispath, impath))
+        img2 =  cv2.imread(os.path.join(thispath, impath2))
+        colorextr = ColorFeatureExtracter(img)
+        colorextr2 = ColorFeatureExtracter(img2)
+        print(colorextr.CompareFeatures(colorextr2.ComputeFeatures(),colorextr.ComputeFeatures()))
         # ... and then evaluate the output
 
 # This if statement gets executed when you run this file, so > python color.py
