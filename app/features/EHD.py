@@ -14,9 +14,9 @@ def EHDFeatures(image):
 
     img1 = Image(image)
 
-    edgeFeats = EdgeHistogramFeatureExtractor(bins=15)
+    edgeFeats = EdgeHistogramFeatureExtractor(bins=16)
 
-    results = np.array(edgeFeats.extract(img1))
+    results = np.array(edgeFeats.extract(img1), dtype = np.float32)
 
     return results
 
@@ -24,7 +24,7 @@ def EHDFeatures(image):
 def compareEHDFeatures(image1, image2):
     feature1 = EHDFeatures(image1)
     feature2 = EHDFeatures(image2)
-    return distance.cosine(feature1, feature2)
+    return cv2.compareHist(feature1, feature2, 3)
 
 
 ################################################################################

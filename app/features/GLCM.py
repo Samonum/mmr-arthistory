@@ -2,11 +2,12 @@ import unittest
 import cv2
 import numpy as np
 import os
-from scipy.spatial import distance
 import matplotlib.pyplot as plt
+from scipy.spatial import distance
 from skimage.color import rgb2gray
 from scipy.misc import imread
 from skimage.feature import greycomatrix, greycoprops
+
 def GLCMFeatures(image):
     """
     Function that calculate the gray level co-occurrence matrix of an image.
@@ -22,13 +23,13 @@ def GLCMFeatures(image):
     results = np.concatenate((results, greycoprops(glcms, 'energy')))
     results = np.concatenate((results, greycoprops(glcms, 'correlation')))
     results = results.flatten()
-    return results
+    return results.astype(np.float32)
 
-#Call this fucntion to measure the similarity of two feature vectors of EHD
+#Call this fucntion to measure the similarity of two feature vectors of GLCM
 def compareGLCMFeatures(image1, image2):
     feature1 = GLCMFeatures(image1)
     feature2 = GLCMFeatures(image2)
-    return distance.braycurtis(feature1, feature2)
+    return cv2.compareHist(feature1, feature2, 3)
 
 
 ################################################################################
