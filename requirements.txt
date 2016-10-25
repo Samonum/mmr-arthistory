@@ -1,1 +1,8 @@
 flask
+fabric
+xmltodict
+simpledb
+
+SimpleCV
+pygame
+scikit-image
