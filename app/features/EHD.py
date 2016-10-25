@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 import cv2
 import os
+from scipy.spatial import distance
 from SimpleCV import Image, np, EdgeHistogramFeatureExtractor
 
 def EHDFeatures(image):
@@ -13,13 +14,18 @@ def EHDFeatures(image):
 
     img1 = Image(image)
 
-    edgeFeats = EdgeHistogramFeatureExtractor(bins=20)
+    edgeFeats = EdgeHistogramFeatureExtractor(bins=16)
 
-    results = np.array(edgeFeats.extract(img1))
-    #results = edgeFeats.getFieldNames()
-    #results = edgeFeats.getNumFields()
+    results = np.array(edgeFeats.extract(img1), dtype = np.float32)
 
     return results
+
+#Call this fucntion to measure the similarity of two feature vectors of EHD
+def compareEHDFeatures(image1, image2):
+    feature1 = EHDFeatures(image1)
+    feature2 = EHDFeatures(image2)
+    return cv2.compareHist(feature1, feature2, 3)
+
 
 ################################################################################
 # TESTS
@@ -32,10 +38,11 @@ class TestEHDFeatures(unittest.TestCase):
     def test_EHDFeatures(self):
         """Should output the designated features of EHD"""
         thispath = os.path.dirname(__file__)
-        impath = os.path.join("test", "opencv-logo.png")
-        img = cv2.imread(os.path.join(thispath, impath))
-        features = EHDFeatures(img)
-        print(features)
+        impath1 = os.path.join("test", "740.jpg")
+        img1 = cv2.imread(os.path.join(thispath, impath1))
+        impath2 = os.path.join("test", "741.jpg")
+        img2 = cv2.imread(os.path.join(thispath, impath2))
+        print compareEHDFeatures(img1, img2)
 
 # This if statement gets executed when you run this file, so > python color.py
 if __name__ == '__main__':

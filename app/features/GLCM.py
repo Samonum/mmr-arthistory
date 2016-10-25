@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from scipy.spatial import distance
 from skimage.color import rgb2gray
 from scipy.misc import imread
 from skimage.feature import greycomatrix, greycoprops
@@ -13,14 +14,23 @@ def GLCMFeatures(image):
 
     Coded by An Li
     """
-    GrayImg = rgb2gray(image)
-    glcms = greycomatrix(GrayImg, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=4)
+
+    GrayImg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    glcms = greycomatrix(GrayImg, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=256, normed=True)
     results = greycoprops(glcms, 'contrast')
     results = np.concatenate((results, greycoprops(glcms, 'dissimilarity')))
     results = np.concatenate((results, greycoprops(glcms, 'homogeneity')))
     results = np.concatenate((results, greycoprops(glcms, 'energy')))
     results = np.concatenate((results, greycoprops(glcms, 'correlation')))
-    return results
+    results = results.flatten()
+    return results.astype(np.float32)
+
+#Call this fucntion to measure the similarity of two feature vectors of GLCM
+def compareGLCMFeatures(image1, image2):
+    feature1 = GLCMFeatures(image1)
+    feature2 = GLCMFeatures(image2)
+    return cv2.compareHist(feature1, feature2, 3)
+
 
 ################################################################################
 # TESTS
@@ -33,10 +43,13 @@ class TestGLCMFeatures(unittest.TestCase):
     def test_GLCMFeatures(self):
         """Should output the designated features of GCLM"""
         thispath = os.path.dirname(__file__)
-        impath = os.path.join("test", "lady.png")
-        img = cv2.imread(os.path.join(thispath, impath))
-        features = GLCMFeatures(img)
-        print(features)
+        impath1 = os.path.join("test", "740.jpg")
+        img1 = cv2.imread(os.path.join(thispath, impath1))
+        impath2 = os.path.join("test", "741.jpg")
+        img2 = cv2.imread(os.path.join(thispath, impath2))
+        print compareGLCMFeatures(img1, img2)
+
+
 
 # This if statement gets executed when you run this file, so > python color.py
 if __name__ == '__main__':
