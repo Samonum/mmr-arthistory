@@ -6,13 +6,13 @@
 
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css" integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi" crossorigin="anonymous">
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://unpkg.com/masonry-layout@4.1/dist/masonry.pkgd.min.js"></script>
+  <script src="https://npmcdn.com/imagesloaded@4/imagesloaded.pkgd.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/js/bootstrap.min.js" integrity="sha384-BLiI7JTZm+JWlgKa0M0kGRpJbF2J8q+qreVrKBC47e3K6BW78kGLrCkeRX6I9RoK" crossorigin="anonymous"></script>
 
   <style>
   /* Flexbox layout */
   html, body {
-    margin: 0;
-    height: 100%;
     background: #55616F;
   }
   .msgbar {
@@ -22,6 +22,12 @@
     text-align: center;
     background-color: red;
     color: white;
+  }
+  .grid-sizer, .grid-item {
+    width: 33.33%;
+  }
+  .portfoliothumbnail {
+    width: 100%;
   }
   /*.imgframe {
     padding-left: 20%;
@@ -39,12 +45,6 @@
     justify-content: space-around;
     align-items: center;
   }
-  .leftcol, .rightcol {
-    flex: 0 0 40%;
-  }
-  .midcol {
-    flex: 0 0 20%;
-  }
   .midcolinside {
     margin-right: 100px;
   }*/
@@ -58,16 +58,11 @@
         <div class="msgbar" v-if="message">
           {{message}}
         </div>
-        <div class="leftcol">
-
-        </div>
-        <div class="midcol">
-          <div v-for="painting in paintings">
-            <img v-bind:src="'/api'+painting.afbeelding">
+        <div class="grid">
+          <div class="grid-sizer"></div>
+          <div v-for="painting in paintings" class="grid-item">
+            <img v-bind:src="'/api'+painting.afbeelding" class="portfoliothumbnail">
           </div>
-        </div>
-        <div class="rightcol">
-
         </div>
   </div>
 {% endraw %}
@@ -77,6 +72,14 @@
 
 <script type="text/javascript">
 function ready() {
+
+  function initMasonry() {
+    $('.grid').masonry({
+      itemSelector: '.grid-item',
+      columnWidth: '.grid-sizer',
+      percentPosition: true,
+    });
+  }
 
   var vm = new Vue({
     el: '#app',
@@ -90,7 +93,7 @@ function ready() {
       getAllPaintings: function() {
         return axios.get('/api/get_all_paintings')
         .then((response) => {
-          this.paintings = response.data.slice(0,30);
+          this.paintings = response.data.slice(0,60);
         }).catch((error) => {
           this.message = "Error loading all paintings list";
         });
@@ -128,7 +131,10 @@ function ready() {
     }
   });
 
-  vm.getAllPaintings();
+  vm.getAllPaintings().then(initMasonry);
+
+  // USE THIS WHEN SHOWING EXTRA paintings
+  // grid.masonry('layout');
 
   document.vm = vm;
 }
