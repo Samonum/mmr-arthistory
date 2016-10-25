@@ -94,3 +94,6 @@ ENV/
 .ropeproject
 
 schilderijen/
+
+log.txt
+results.json

@@ -15,7 +15,7 @@ db = TinyDB(os.path.join(os.getcwd(), 'results.json'))
 
 @showoffapp.route("/")
 def index():
-    return "Showing off our single-page app"
+    return render_template("show.html")
 
 @trainingapp.route("/")
 def train():
@@ -30,6 +30,28 @@ def compare_by():
         return {'compare_by': 'color', 'msg': "Compare the two paintings based on color."}
     else:
         return {'compare_by': 'texture', 'msg': "Compare the two paintings based on texture."}
+
+def copylistdict(a, b, *names):
+    "Copy names from list of dicts a to list of dicts b"
+    keyerrs = {}
+    for i in a:
+        add = {}
+        for n in names:
+            try:
+                add[n] = i[n]
+            except KeyError as e:
+                if keyerrs.get(n): keyerrs[n] += 1
+                else: keyerrs[n] = 1
+        b.append(add)
+    print("\nKeyerrors: " + str(keyerrs) + "\n")
+
+@api.route("/get_all_paintings")
+def get_all_paintings():
+    tree = get_tree()
+    # prune for important information, avoid sending whole thing over the wire
+    out = []
+    copylistdict(tree, out, 'titel', 'afbeelding')
+    return json.dumps(out)
 
 @api.route("/get_random_painting")
 def get_random_painting():

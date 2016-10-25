@@ -4,8 +4,20 @@
 
 import xml.etree.ElementTree as ET
 import xmltodict
+import json
 
 def get_tree(remember={}):
+    # Memoize tree, using the fact that kwargs only get instantiated once
+    if not remember.get('tree'):
+        with open('./data/extracted.json', 'r') as f:
+            remember['tree'] = json.load(f)
+    return remember['tree']
+
+def save_tree(tree):
+    with open('./data/extracted.json', 'w') as f:
+        json.dump(tree, f)
+
+def get_tree_xml(remember={}):
     # Memoize tree, using the fact that kwargs only get instantiated once
     if not remember.get('tree'):
         with open('./data/extracted.xml', 'rb') as f:

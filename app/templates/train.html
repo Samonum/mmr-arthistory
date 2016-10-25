@@ -51,7 +51,7 @@
         </div>
         <div class="rightcol">
           <div class="imgframe">
-            <img v-if="show" v-bind:src="'/api'+similarimg.afbeelding">
+            <img v-if="show" v-bind:src="'/api'+similarimg.afbeelding" class=" slideInUp">
           </div>
         </div>
         <div class="midcol">
@@ -61,10 +61,11 @@
             {{ message }}
             <br><br>
             <div v-if="showbuttons" class="vote" v-on:click="vote">
-              <button value='3'>Very similar</button><br>
-              <button value='2'>Similar</button><br>
-              <button value='1'>Not similar</button><br><br>
-              <button value='0'>I don't know</button><br>
+              <button value='5'>5 - Very similar</button><br>
+              <button value='4'>4</button><br>
+              <button value='3'>3</button><br>
+              <button value='2'>2</button><br>
+              <button value='1'>1 - Not similar</button><br><br>
             </div>
           <div>
         </div>
