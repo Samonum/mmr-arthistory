@@ -88,8 +88,6 @@ class ColorFeatureExtracter:
             return self._hsvimg.item(x, y, 0) // 9
         return 20+self._hsvimg.item(x, y, 2)//32
         
-        
-        
     def BICHistogram(self):
         """
         Generates a histogram based on the given HSV image.
