@@ -83,11 +83,6 @@ class ColorFeatureExtracter:
         self._hsvHistogram = sHistogram
         return sHistogram
         
-    def HsvBinn(self, pixel):
-        if pixel[1] > 255-.8*pixel[2]:
-            return pixel[0] // 9
-        return 20+pixel[2]//32
-        
     def HsvBin(self, x, y):
         if self._hsvimg.item(x, y, 1) > 255-.8*self._hsvimg.item(x, y, 2):
             return self._hsvimg.item(x, y, 0) // 9
