@@ -11,9 +11,10 @@ import numpy
         
                 
 class ColorFeatureExtracter:
-    _hlsHistogram = 0
+    _hsvHistogram = 0
+    _bicHistogram = 0
     _opencvimg = 0
-    _hlsimg = 0
+    _hsvimg = 0
     _rgbHistogram = 0
     _rgbAvrg = 0
     _rgbStd = 0
@@ -25,8 +26,9 @@ class ColorFeatureExtracter:
     #THE method to call for All your colour related features!
     def ComputeFeatures(self):
         res = {}
-        res['ColorBitmap']  = self.ColorBitmap()
-        res['RgbHist']      = self.RgbHistogram()
+        res['ColorBitmap'] = self.ColorBitmap()
+        res['BIC']          = self.BICHistogram()
+        res['HsvHist']      = self.HsvHistogram()
         return res
     
     #THE method to call for All your colour related comparisons
@@ -34,7 +36,9 @@ class ColorFeatureExtracter:
     def CompareFeatures(features1, features2):
         res = {}
         for key in features1:
-            if(key == "RgbHist"):
+            if(key == "HsvHist"):
+                res[key] = cv2.compareHist(features1[key], features2[key], 3)
+            if(key == "BIC"):
                 res[key] = cv2.compareHist(features1[key], features2[key], 3)
             if(key == "ColorBitmap"):
                 res[key] = ColorFeatureExtracter.CompareColorBitmap(features1[key], features2[key])
@@ -49,55 +53,83 @@ class ColorFeatureExtracter:
         return res
         
     
-    #depricated
-    def HlsHistogram(self):
+    def HsvHistogram(self):
         """
-        Generates a histogram based on the given HLS image.
-        The histogram contains 20 bins for different hue values and 1 bin for greyscale.
+        Generates a histogram based on the given HSV image.
+        The histogram contains 20 bins for different hue values and 8 bins for greyscale.
         """
-        if self._hlsHistogram:
-            return self._hlsHistogram
-        hlsimg = self.HlsImage()
-        #Algorithm parameters
-        #Note that in OpenCV hls uses the ranges [0,179], [0,255] and [0,255] respectively
-        saturationThreshold = (int)(.2 * 255)
-        minLightness = (int)(.15 * 255)
-        maxLightness = (int)(.95 * 255)
-        
-        
-        histogram = [0] * 21
-        [width, height, depth] = hlsimg.shape
-        
+        if not self._hsvHistogram is 0:
+            return self._hsvHistogram
+        if not self._bicHistogram is 0:
+            self._hsvHistogram = self._bicHistogram[:28] + self._bicHistogram[28:]
+            return self._hsvHistogram
+        hsvimg = self.HsvImage()
+        #Note that in OpenCV hsv uses the ranges [0,179], [0,255] and [0,255] respectively
+        histogram = numpy.zeros(28, dtype=numpy.float32)
+        [width, height, depth] = hsvimg.shape
         for y in xrange(height):
             for x in xrange(width):
-                #If not greyscale
-                if hlsimg.item(x, y, 2) > saturationThreshold or minLightness < hlsimg.item(x, y, 1) < maxLightness:
-                    histogram[hlsimg.item(x, y, 0) // 9] += 1
-                #Else
+                    histogram[self.HsvBin(x,y)] += 1
+        
+        histogram /= width*height
+        
+        sHistogram = numpy.zeros(28, dtype=numpy.float32)
+        sHistogram[0] = 0.25 * histogram[20] +  0.5 * histogram[0] +  0.25 * histogram[1]
+        sHistogram[20] = 0.5 * histogram[20] +  0.25 * histogram[0] +  0.25 * histogram[19]
+        
+        for i in xrange(1, 19):
+            sHistogram[i] = 0.25 * histogram[i-1] +  0.5 * histogram[i] +  0.25 * histogram[i+1]
+        
+        self._hsvHistogram = sHistogram
+        return sHistogram
+        
+    def HsvBin(self, x, y):
+        if self._hsvimg.item(x, y, 1) > 255-.8*self._hsvimg.item(x, y, 2):
+            return self._hsvimg.item(x, y, 0) // 9
+        return 20+self._hsvimg.item(x, y, 2)//32
+        
+    def BICHistogram(self):
+        """
+        Generates a histogram based on the given HSV image.
+        The histogram contains 20 bins for different hue values and 8 bins for greyscale.
+        """
+        if not self._bicHistogram is 0:
+            return self._bicHistogram
+        hsvimg = self.HsvImage()
+        #Note that in OpenCV hsv uses the ranges [0,179], [0,255] and [0,255] respectively
+        histogram = numpy.zeros(56, dtype=numpy.float32)
+        [width, height, depth] = hsvimg.shape
+        swidth = width-1
+        sheight = height-1
+        for y in xrange(height):
+            for x in xrange(width):
+                #index = self.HsvBin(hsvimg[x][y])
+                #if index != self.HsvBin(hsvimg[min(x+1, swidth)][min(y+1, sheight)]) or index != self.HsvBin(hsvimg[min(x+1, swidth)][max(y-1, 0)]) or index != self.HsvBin(hsvimg[max(x-1, 0)][min(y+1, sheight)]) or index != self.HsvBin(hsvimg[max(x-1, 0)][max(y-1, 0)]):
+                index=self.HsvBin(x, y)
+                if index != self.HsvBin(min(x+1, swidth),min(y+1, sheight)) or index != self.HsvBin(min(x+1, swidth),max(y-1, 0)) or index != self.HsvBin(max(x-1, 0),min(y+1, sheight)) or index != self.HsvBin(max(x-1, 0),max(y-1, 0)):
+                    histogram[28+index] += 1
                 else:
-                    histogram[20] += 1
+                    histogram[index] += 1
+        histogram /= width*height
+        sHistogram = numpy.zeros(56, dtype=numpy.float32)
+        sHistogram[0] = 0.25 * histogram[20] +  0.5 * histogram[0] +  0.25 * histogram[1]
+        sHistogram[20] = 0.5 * histogram[20] +  0.25 * histogram[0] +  0.25 * histogram[19]
         
-        self._hlsHistogram = histogram
-        return histogram
+        for i in xrange(1, 19):
+            sHistogram[i] = 0.25 * histogram[i-1] +  0.5 * histogram[i] +  0.25 * histogram[i+1]
+        
+        sHistogram[28] = 0.25 * histogram[48] +  0.5 * histogram[28] +  0.25 * histogram[29]
+        sHistogram[48] = 0.5 * histogram[48] +  0.25 * histogram[28] +  0.25 * histogram[47]
+        
+        for i in xrange(29, 47):
+            sHistogram[i] = 0.25 * histogram[i-1] +  0.5 * histogram[i] +  0.25 * histogram[i+1]
+        self._bicHistogram = sHistogram
+        return sHistogram
     
-    def HlsImage(self):
-        if not self._hlsimg:
-            self._hlsimg = cv2.cvtColor(self._opencvimg, cv2.COLOR_BGR2HLS)
-        return self._hlsimg
-        
-    #depricated
-    def HueCount(self):
-        #Algorithm parameters
-        noiseThreshold = .05
-
-        histogram = self.HlsHistogram()
-        maxColor = max(histogram)
-        return len([x for x in histogram if x > maxColor * noiseThreshold])
-        
-    #depricated
-    def MostCommonColor(self):
-        histogram = HlsHistogram()
-        return histogram.index(max(histogram))
+    def HsvImage(self):
+        if self._hsvimg is 0:
+            self._hsvimg = cv2.cvtColor(self._opencvimg, cv2.COLOR_BGR2HSV)
+        return self._hsvimg
         
     def RgbHistogram(self):
         """
@@ -106,14 +138,14 @@ class ColorFeatureExtracter:
         if not self._rgbHistogram is 0:
             return self._rgbHistogram
         [width, height, depth] = self._opencvimg.shape
-        histogram = [[0]*16,[0]*16, [0]*16]
+        histogram = numpy.zeros(48, dtype=numpy.float32)
         
-        for y in xrange(0, height):
-            for x in xrange(0, width):
-                for i in xrange(0, depth):
-                    histogram[i][self._opencvimg.item(x, y, i)//16] += 1
-        histogram = list(map(lambda rgb: list(map(lambda x: float(x)/(width*height), rgb)), histogram))
-        self._rgbHistogram = numpy.asarray(histogram, dtype=numpy.float32)
+        for y in xrange(height):
+            for x in xrange(width):
+                for i in xrange(depth):
+                    histogram[i*16+self._opencvimg.item(x, y, i)//16] += 1
+        histogram /= width*height
+        self._rgbHistogram = histogram
         return self._rgbHistogram
     
     def RgbAverages(self):
@@ -161,8 +193,8 @@ class TestColorFeatures(unittest.TestCase):
     def test_hue(self):
         """Should output correct hue count, for the given image 4"""
         thispath = os.path.dirname(__file__)
-        impath = os.path.join("test", "opencv-logo.png")
-        impath2 = os.path.join("test", "lady.png")
+        impath = os.path.join("test", "737.jpg")
+        impath2 = os.path.join("test", "738.jpg")
         
         img = cv2.imread(os.path.join(thispath, impath))
         img2 =  cv2.imread(os.path.join(thispath, impath2))
