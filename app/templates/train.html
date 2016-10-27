@@ -80,6 +80,8 @@
 <script type="text/javascript">
 function ready() {
 
+  var sessionhash = Math.random().toString().slice(2,10);
+
   var vm = new Vue({
     el: '#app',
     data: {
@@ -132,6 +134,7 @@ function ready() {
           'mainimg': this.mainimg,
           'similarimg': this.similarimg,
           'votevalue': ev.target.value,
+          'sessionhash': sessionhash,
         };
         axios.post('/api/vote', j).then((response)=>{
           this.message = response.data.msg;

@@ -36,7 +36,7 @@ if __name__ == '__main__':
         t1 = c()
         ehdfeat = EHD.EHDFeatures(cvim)
         t2 = c()
-        # gfeat = GF.GaborFeatures().feats_gabor(cvim)
+        gfeat = GF.GaborFeatures().feats_gabor(cvim)
         t3 = c()
         glcmfeat = GLCM.GLCMFeatures(cvim)
         t4 = c()

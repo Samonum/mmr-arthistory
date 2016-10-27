@@ -10,6 +10,7 @@ import datetime
 import logging
 
 logging.basicConfig(filename='log.txt', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 db = TinyDB(os.path.join(os.getcwd(), 'results.json'))
 
@@ -57,8 +58,10 @@ def get_all_paintings():
 def get_random_painting():
     tree = get_tree()
     i = random.randint(0, len(tree)-1)
+    # Remove features as they are not json serializable
     # Add index for easy retrieval later
-    return json.dumps(dict(**tree[i], **compare_by(), index=i))
+    return json.dumps(dict(((k,v) for (k,v) in tree[i].items() if k != 'features'),
+                    **compare_by(), index=i))
 
 @api.route("/schilderijen/<int:n>.jpg")
 def get_painting_img(n):
@@ -73,6 +76,12 @@ def get_similar_painting():
     # TODO: Calculate distance to all other paintings
     j['compare_by']
     # TODO: Sort and return best n
+
+    # TODO: pick one feature from feature dict
+
+    # TODO: Also return random painting every once in a while for spread
+
+    # TODO: Add distance to json obj for later analysis
     return get_random_painting()
 
 @api.route("/vote", methods=["POST"])
@@ -83,8 +92,9 @@ def vote():
     mainimgindex = j['mainimg']['index']
     similarimgindex = j['similarimg']['index']
     votevalue = j['votevalue']
+    sessionhash = j['sessionhash']
     timestamp = datetime.datetime.now()
-    logging.info("\n\nAt {:%Y-%m-%d %H:%M} images #{} and #{} were compared by {} and given value {}\n\n"
-    .format(timestamp, mainimgindex, similarimgindex, compare_by, votevalue))
+    logger.info("\n\nAt {:%Y-%m-%d %H:%M} images #{} and #{} were compared by {} and given value {} during session {}\n\n"
+    .format(timestamp, mainimgindex, similarimgindex, compare_by, votevalue, sessionhash))
     db.insert(dict(j, timestamp=timestamp.isoformat()))
     return json.dumps({'msg': "Vote received!"})

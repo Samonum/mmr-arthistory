@@ -116,6 +116,7 @@ function ready() {
         .then((response) => {
           var paintings = response.data;
           paintings = shuffle(paintings);
+          // TODO: true infinite scroll
           this.paintings = paintings.slice(0,60);
         }).catch((error) => {
           this.message = "Error loading all paintings list";

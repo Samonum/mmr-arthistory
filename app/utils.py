@@ -15,12 +15,15 @@ else:
 def get_tree(remember={}):
     # Memoize tree, using the fact that kwargs only get instantiated once
     if not remember.get('tree'):
-        with open('./data/extracted.pickle', 'r') as f:
-            remember['tree'] = pickle.load(f)
+        with open('./data/extracted.pickle', 'rb') as f:
+            if version == 2:
+                remember['tree'] = pickle.load(f)
+            else:
+                remember['tree'] = pickle.load(f, encoding='latin1')
     return remember['tree']
 
 def save_tree(tree):
-    with open('./data/extracted.pickle', 'w') as f:
+    with open('./data/extracted.pickle', 'wb') as f:
         pickle.dump(tree, f)
 
 def get_tree_xml(remember={}):
