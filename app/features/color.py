@@ -103,9 +103,7 @@ class ColorFeatureExtracter:
         for y in xrange(height):
             for x in xrange(width):
                 index = self.HsvBin(hsvimg[x][y])
-                print [index, self.HsvBin(hsvimg[min(x+1, swidth)][min(y+1, sheight)]), self.HsvBin(hsvimg[min(x+1, swidth)][max(y-1, 0)]), self.HsvBin(hsvimg[max(x-1, 0)][min(y+1, sheight)]), self.HsvBin(hsvimg[min(x-1, 0)][min(y-1, 0)])]
-                if index != self.HsvBin(hsvimg[min(x+1, swidth)][min(y+1, sheight)]) or index != self.HsvBin(hsvimg[min(x+1, swidth)][max(y-1, 0)]) or index != self.HsvBin(hsvimg[max(x-1, 0)][min(y+1, sheight)]) or index != self.HsvBin(hsvimg[min(x-1, 0)][min(y-1, 0)]):
-                print 'false'
+                if index != self.HsvBin(hsvimg[min(x+1, swidth)][min(y+1, sheight)]) or index != self.HsvBin(hsvimg[min(x+1, swidth)][max(y-1, 0)]) or index != self.HsvBin(hsvimg[max(x-1, 0)][min(y+1, sheight)]) or index != self.HsvBin(hsvimg[max(x-1, 0)][max(y-1, 0)]):
                     histogram[28+index] += 1
                 else:
                     histogram[index] += 1
