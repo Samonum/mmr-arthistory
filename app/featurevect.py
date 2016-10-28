@@ -13,16 +13,21 @@ from features import EHD, GF, GLCM
 
 from concurrent.futures import ThreadPoolExecutor
 
+# Settings
 save_every_n = 100
+multithreaded = True
 
 t = get_tree()
 
 def main():
-
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    if multithreaded:
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            for i, painting in enumerate(t):
+                future = executor.submit(calcfeats, i, painting)
+            print("\n\nSubmitted all tasks\n\n")
+    else:
         for i, painting in enumerate(t):
-            future = executor.submit(calcfeats, i, painting)
-        print("\n\nSubmitted all tasks\n\n")
+            calcfeats(i, painting)
     print("\n\nDone with all paintings\n\n")
 
 def calcfeats(i, painting):
@@ -50,7 +55,7 @@ def calcfeats(i, painting):
     glcmfeat = GLCM.GLCMFeatures(cvim)
     t4 = c()
 
-    print("Extracting texture features took {:.6f}s for EHD,\
+    print("Extracting texture features took {:.6f}s for EHD, \
 {:.6f}s for GF, {:.6f}s for GLCM".format(t2-t1, t3-t2, t4-t3))
 
     # Add feature vect
