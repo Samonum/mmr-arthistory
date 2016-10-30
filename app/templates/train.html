@@ -3,6 +3,7 @@
 <head>
   <title>MMR arthistory project - Training</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css" integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi" crossorigin="anonymous">
 
   <style>
   /* Flexbox layout */
@@ -10,6 +11,7 @@
     margin: 0;
     height: 100%;
     background: #55616F;
+    color: black;
   }
   .imgframe {
     padding-left: 20%;
@@ -20,7 +22,7 @@
     height: auto;
     display: block;
   }
-  .container {
+  .appcontainer {
     height: 100%;
     /*width: 100%;*/
     display: flex;
@@ -37,36 +39,46 @@
   .midcolinside {
     margin-right: 100px;
   }
+  .msg {
+    font-size: 1.2em;
+    color: white;
+  }
+  .msg > span {
+    font-size: 1.2em;
+    font-weight: bold;
+  }
   </style>
 </head>
 <body>
 
 {# Use raw for jinja2 escaping! #}
 {% raw %}
-  <div id="app" class="container">
+  <div id="app" class="appcontainer">
         <div class="leftcol">
           <div class="imgframe">
-            <img v-if="show" v-bind:src="'/api'+mainimg.afbeelding">
+            <img v-if="show" v-bind:src="mainimg.afbeelding">
           </div>
         </div>
         <div class="rightcol">
           <div class="imgframe">
-            <img v-if="show" v-bind:src="'/api'+similarimg.afbeelding" class=" slideInUp">
+            <img v-if="show" v-bind:src="similarimg.afbeelding">
           </div>
         </div>
         <div class="midcol">
           <div class="midcolinside">
             <span v-if="show">Timer: {{ timer.toFixed(0) }}s</span>
             <br><br>
-            {{ message }}
+            <span v-html="message" class="msg">
+
+            </span>
             <br><br>
-            <div v-if="showbuttons" class="vote" v-on:click="vote">
-              <button value='5'>5 - Very similar</button><br>
-              <button value='4'>4</button><br>
-              <button value='3'>3</button><br>
-              <button value='2'>2</button><br>
-              <button value='1'>1 - Not similar</button><br><br>
-              <button value='0'>I don't know</button>
+            <div v-if="showbuttons" class="vote btn-group-vertical" v-on:click="vote">
+              <button class="btn btn-secondary" value='5'>5 - Very similar</button>
+              <button class="btn btn-secondary" value='4'>4</button>
+              <button class="btn btn-secondary" value='3'>3</button>
+              <button class="btn btn-secondary" value='2'>2</button>
+              <button class="btn btn-secondary" value='1'>1 - Not similar</button>
+              <button class="btn btn-secondary" value='0'>I don't know</button>
             </div>
           <div>
         </div>
@@ -82,6 +94,8 @@ function ready() {
 
   var sessionhash = Math.random().toString().slice(2,10);
 
+  var MAX_PAINTINGS = 30;
+
   var vm = new Vue({
     el: '#app',
     data: {
@@ -90,6 +104,8 @@ function ready() {
       },
 
       message: "",
+
+      npaintings: 0,
 
       mainimg: {},
       similarimg: {},
@@ -138,9 +154,12 @@ function ready() {
         };
         axios.post('/api/vote', j).then((response)=>{
           this.message = response.data.msg;
+          this.npaintings += 1;
+          if (this.npaintings > MAX_PAINTINGS) {
+            window.location.href = "{{url_for('thanks')}}";
+          }
+          this.loadAndShow();
         });
-        // Load new paintings
-        this.loadAndShow();
       },
       loadAndShow: function() {
         // Promises!

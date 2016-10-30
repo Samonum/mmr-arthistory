@@ -32,7 +32,3 @@ def get_tree_xml(remember={}):
         with open('./data/extracted.xml', 'rb') as f:
             remember['tree'] = xmltodict.parse(f)['kunstwerken']['kunstwerk']
     return remember['tree']
-
-def dist(vec1, vec2):
-    "Calculate distance between two feature vectors"
-    return 1

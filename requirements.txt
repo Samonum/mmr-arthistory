@@ -5,4 +5,5 @@ tinydb
 
 SimpleCV
 pygame
+numpy
 scikit-image

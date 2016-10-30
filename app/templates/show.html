@@ -61,7 +61,7 @@
         <div class="grid">
           <div class="grid-sizer"></div>
           <div v-for="painting in paintings" class="grid-item">
-            <img v-bind:src="'/api'+painting.afbeelding" class="portfoliothumbnail">
+            <img v-bind:src="painting.afbeelding" class="portfoliothumbnail">
           </div>
         </div>
   </div>

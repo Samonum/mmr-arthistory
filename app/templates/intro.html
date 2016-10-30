@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MMR arthistory project - Introduction</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css" integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi" crossorigin="anonymous">
+    <style type="text/css">
+    body {
+      background: white;
+      color: black;
+    }
+    .container {
+      margin-top: 2em;
+    }
+    .btnwrap {
+      text-align: center;
+    }
+    </style>
+</head>
+<body>
+  <div class="container">
+    <p>
+      Dear participant,
+
+      <br><br>In this application you will be shown 30 pairs of paintings. For each pair of paintings we will ask you to rate how similar they are on a scale of 1 to 5, with 5 being ‘very similar’ and 1 being ‘not similar at all’. You also have the option ‘I don’t know’ if you find it too hard to rate the similarity of a certain painting pair.
+
+      <br><br>What is important is that you base your similarity on either texture or color. Which one too chose will be shown on the right hand side of the screen. Color is straightforward. Texture says something about the complexity and composition of the paintings (think of the hardness of lines, the edges etc.), so please narrow your view to only this when asked to do so!
+
+      <br><br>You will have 10 seconds to look at the two paintings. After that they will not be visible anymore. You will however have as much time as you need to give your rating.
+
+      <br><br>After you have rated 30 pairs, you are done!
+
+      <br><br>Thanks in advance for helping us!
+
+      <br><br>Greetings,
+
+      <br>An, Sam, Fons &amp; Marthe
+    </p>
+    <div class="btnwrap">
+      <a class="btn btn-primary" href="{{url_for('trainingapp.train')}}">Rate some paintings!</a>
+    </div>
+  </div>
+
+
+
+</body>
+</html>
