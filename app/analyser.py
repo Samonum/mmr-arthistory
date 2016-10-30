@@ -11,34 +11,6 @@ import utils
 from features import color
 #from features import EHD, GF, GLCM
 
-def analyse_features():
-    resultPath = os.path.join(os.getcwd(), os.path.join('data','results.json'))
-    resultFile = open(resultPath, 'r')
-    resultArray = json.load(resultFile)
-    
-    cUserRating = []
-    cImg1 = []
-    cImg2 = []
-    
-    tUserRating = []
-    tImg1 = []
-    tImg2 = []
-    
-    for item in resultArray:
-        if item['mainimg']['compare_by'] == 'color':
-            cUserRating.append(item['votevalue'])
-            cImg1.append(item['mainimg']['index'])
-            cImg1.append(item['similarimg']['index'])
-        else:
-            tUserRating.append(item['votevalue'])
-            tImg1.append(item['mainimg']['index'])
-            tImg1.append(item['similarimg']['index'])
-    
-    print utils.get_tree()
-    return 0
-
-analyse_features();
-
 def linear_regression(x, y):
     """
     Given two matching data sets caculates the closest fitting line
@@ -52,6 +24,43 @@ def linear_regression(x, y):
     
     stdev = numpy.sqrt(numpy.diag(covar))
     return yay,(covar[0][1]/(stdev[0]*stdev[1]))
+
+def analyse_features():
+    resultPath = os.path.join(os.getcwd(), os.path.join('data','results.json'))
+    resultFile = open(resultPath, 'r')
+    resultArray = json.load(resultFile)
+    
+    cUserRating = []
+    hsvHist = []
+    bitmap = []
+    bic = []
+    
+    
+    t = utils.get_tree()
+    
+    
+    tUserRating = []
+    tImg1 = []
+    tImg2 = []
+    
+    for item in resultArray:
+        if item['votevalue'] == 0:
+            continue
+        img1 = int(item['mainimg']['index'])
+        img2 = int(item['similarimg']['index'])
+        if item['mainimg']['compare_by'] == 'color':
+            cUserRating.append(1-(float(item['votevalue']))/5)
+            comp = color.ColorFeatureExtracter.CompareFeatures(t[img1 -1]['features'],t[img2-1]['features'])
+            hsvHist.append(comp['HsvHist'])
+            bitmap.append(comp['ColorBitmap'])
+            bic.append(comp['BIC'])
+            
+        else:
+            tUserRating.append(int(item['votevalue']))
+    print linear_regression(cUserRating,hsvHist)
+    print linear_regression(cUserRating,bitmap)
+    print linear_regression(cUserRating,bic)
+    return 
 
 
 ################################################################################
@@ -67,6 +76,8 @@ class TestColorFeatures(unittest.TestCase):
         
         x = range(0,40000)
         y = range(10,80010,2)
+
+        analyse_features();
         print linear_regression(x, y)
         # ... and then evaluate the output
 
