@@ -97,3 +97,6 @@ schilderijen/
 
 log.txt
 results.json
+ 
+*.p binary
+*.lft binary
