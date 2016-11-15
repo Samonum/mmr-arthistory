@@ -8,6 +8,7 @@ import random
 import datetime
 import logging
 from ..utils_features import dist, get_random_feature
+from ..utils import dist as utils_dist
 from time import clock as c
 from pymongo import MongoClient
 db = MongoClient().resultdb.results
@@ -118,23 +119,18 @@ def get_similar_paintings(n):
     # Get index that we added at get_random_painting()
     mainimgindex = js['index']
     # Calculate distance to all other paintings
-    feature = "ColorBitmap"
     distlist = [None] * len(t)
-    feat1 = t[mainimgindex]['features'][feature]
     t1 = c()
     for i, img in enumerate(t):
-        feat2 = img['features'][feature]
-        # TODO: change dists
-        d = dist(feature, feat1, feat2)
-        distlist[i] = d
+        distlist[i] = utils_dist(js['index'], i)
         # Distance to itself is 0 of course
         if mainimgindex==i: distlist[i] = float('inf')
     t2 = c()
     # Return best n
     similarimgindexes = sorted(enumerate(distlist), key=lambda x: x[1])[:n]
     time = t2-t1
-    logger.info("Calculated distance from painting #{} for feature {} to all other paintings in {:.4f}s, chose #{}"
-    .format(mainimgindex, feature, time, similarimgindexes))
+    logger.info("Calculated distance from painting #{} to all other paintings in {:.4f}s, chose #{}"
+    .format(mainimgindex, time, similarimgindexes))
     # Add distance to json obj for later analysis
     return json.dumps(list(dict((k,v) for (k,v) in t[similarimgindex].items()
                                   if k != 'features')
