@@ -4,6 +4,8 @@ import numpy
 import unittest
 import json
 import os
+import cv2
+import matplotlib.pyplot as plt
 
 
 import utils
@@ -40,26 +42,61 @@ def analyse_features():
     
     
     tUserRating = []
-    tImg1 = []
-    tImg2 = []
+    EHD = []
+    GF = []
+    GLCM = []
     
+    i = 0
+    c = 0
+    hash = 0
     for item in resultArray:
-        if item['votevalue'] == 0:
+        i += 1
+        c *= hash == item['sessionhash']
+        hash = item['sessionhash']
+        c += item['votevalue'] == "0"
+        if c == 30:
+            break
+    
+    resultArray = resultArray[i:]
+    
+    hash = {}
+    for item in resultArray:
+        try:
+            hash[item['sessionhash']] +=1
+        except KeyError:
+            hash[item['sessionhash']] = 1
+        
+    print hash
+    print len(hash)
+    for item in resultArray:
+        if item['votevalue'] == "0" or hash[item['sessionhash']] < 30:# or not item['similarimg']['random']:
             continue
         img1 = int(item['mainimg']['index'])
         img2 = int(item['similarimg']['index'])
         if item['mainimg']['compare_by'] == 'color':
-            cUserRating.append(1-(float(item['votevalue']))/5)
-            comp = color.ColorFeatureExtracter.CompareFeatures(t[img1 -1]['features'],t[img2-1]['features'])
+            cUserRating.append(1-(float(item['votevalue'])-1)/4)
+            comp = color.ColorFeatureExtracter.CompareFeatures(t[img1]['features'],t[img2]['features'])
             hsvHist.append(comp['HsvHist'])
             bitmap.append(comp['ColorBitmap'])
             bic.append(comp['BIC'])
-            
         else:
-            tUserRating.append(int(item['votevalue']))
+            tUserRating.append(1-(float(item['votevalue'])-1)/4)
+            comp = color.ColorFeatureExtracter.CompareFeatures(t[img1]['features'],t[img2]['features'])
+            EHD.append(cv2.compareHist(t[img1]['features']['EHD'], t[img2]['features']['EHD'],3))
+            GF.append(cv2.compareHist(t[img1]['features']['GF'], t[img2]['features']['GF'], 3))
+            GLCM.append(cv2.compareHist(t[img1]['features']['GLCM'], t[img2]['features']['GLCM'],3))
+            
+            
+    plt.plot(cUserRating,hsvHist, 'or')
+    #plt.show()
     print linear_regression(cUserRating,hsvHist)
     print linear_regression(cUserRating,bitmap)
     print linear_regression(cUserRating,bic)
+    #print tUserRating
+    #print EHD
+    print linear_regression(tUserRating,EHD)
+    print linear_regression(tUserRating,GF)
+    print linear_regression(tUserRating,GLCM)
     return 
 
 
