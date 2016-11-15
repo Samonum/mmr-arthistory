@@ -36,15 +36,20 @@ def analyse_features():
     hsvHist = []
     bitmap = []
     bic = []
+    hsvHistu = []
+    bitmapu = []
+    bicu = []
     
     
     t = utils.get_tree()
     
     
-    tUserRating = []
     EHD = []
     GF = []
     GLCM = []
+    EHDu = []
+    GFu = []
+    GLCMu = []
     
     i = 0
     c = 0
@@ -73,30 +78,61 @@ def analyse_features():
             continue
         img1 = int(item['mainimg']['index'])
         img2 = int(item['similarimg']['index'])
-        if item['mainimg']['compare_by'] == 'color':
-            cUserRating.append(1-(float(item['votevalue'])-1)/4)
-            comp = color.ColorFeatureExtracter.CompareFeatures(t[img1]['features'],t[img2]['features'])
-            hsvHist.append(comp['HsvHist'])
-            bitmap.append(comp['ColorBitmap'])
-            bic.append(comp['BIC'])
+        if item['similarimg']['random']:
+            if item['mainimg']['compare_by'] == 'color':
+                hsvHistu.append(1-(float(item['votevalue'])-1)/4)
+                bitmapu.append(1-(float(item['votevalue'])-1)/4)
+                bicu.append(1-(float(item['votevalue'])-1)/4)
+                comp = color.ColorFeatureExtracter.CompareFeatures(t[img1]['features'],t[img2]['features'])
+                hsvHist.append(comp['HsvHist'])
+                bitmap.append(comp['ColorBitmap'])
+                bic.append(comp['BIC'])
+            else:
+                EHDu.append(1-(float(item['votevalue'])-1)/4)
+                EHD.append(cv2.compareHist(t[img1]['features']['EHD'], t[img2]['features']['EHD'],3))
+                GFu.append(1-(float(item['votevalue'])-1)/4)
+                GF.append(cv2.compareHist(t[img1]['features']['GF'], t[img2]['features']['GF'], 3))
+                GLCMu.append(1-(float(item['votevalue'])-1)/4)
+                GLCM.append(cv2.compareHist(t[img1]['features']['GLCM'], t[img2]['features']['GLCM'],3))
         else:
-            tUserRating.append(1-(float(item['votevalue'])-1)/4)
-            comp = color.ColorFeatureExtracter.CompareFeatures(t[img1]['features'],t[img2]['features'])
-            EHD.append(cv2.compareHist(t[img1]['features']['EHD'], t[img2]['features']['EHD'],3))
-            GF.append(cv2.compareHist(t[img1]['features']['GF'], t[img2]['features']['GF'], 3))
-            GLCM.append(cv2.compareHist(t[img1]['features']['GLCM'], t[img2]['features']['GLCM'],3))
+            if(item['mainimg']['feature'] == 'HsvHist'):
+                comp = color.ColorFeatureExtracter.CompareFeatures(t[img1]['features'],t[img2]['features'])
+                hsvHist.append(comp['HsvHist'])
+                hsvHistu.append(1-(float(item['votevalue'])-1)/4)
+            if(item['mainimg']['feature'] == 'ColorBitmap'):
+                comp = color.ColorFeatureExtracter.CompareFeatures(t[img1]['features'],t[img2]['features'])
+                bitmap.append(comp['ColorBitmap'])
+                bitmapu.append(1-(float(item['votevalue'])-1)/4)
+            if(item['mainimg']['feature'] == 'BIC'):
+                comp = color.ColorFeatureExtracter.CompareFeatures(t[img1]['features'],t[img2]['features'])
+                bic.append(comp['BIC'])
+                bicu.append(1-(float(item['votevalue'])-1)/4)
+            if(item['mainimg']['feature'] == 'EHD'):
+                EHD.append(cv2.compareHist(t[img1]['features']['EHD'], t[img2]['features']['EHD'],3))
+                EHDu.append(1-(float(item['votevalue'])-1)/4)
+            if(item['mainimg']['feature'] == 'GF'):
+                GF.append(cv2.compareHist(t[img1]['features']['GF'], t[img2]['features']['GF'], 3))
+                GFu.append(1-(float(item['votevalue'])-1)/4)
+            if(item['mainimg']['feature'] == 'GLCM'):
+                GLCM.append(cv2.compareHist(t[img1]['features']['GLCM'], t[img2]['features']['GLCM'],3))
+                GLCMu.append(1-(float(item['votevalue'])-1)/4)
             
-            
-    plt.plot(cUserRating,hsvHist, 'or')
+    plt.plot(hsvHistu,hsvHist, 'or')
     #plt.show()
-    print linear_regression(cUserRating,hsvHist)
-    print linear_regression(cUserRating,bitmap)
-    print linear_regression(cUserRating,bic)
+    print 'HsvHist'
+    print linear_regression(hsvHistu,hsvHist)
+    print "Bitmap"
+    print linear_regression(bitmapu,bitmap)
+    print "BIC"
+    print linear_regression(bicu,bic)
     #print tUserRating
     #print EHD
-    print linear_regression(tUserRating,EHD)
-    print linear_regression(tUserRating,GF)
-    print linear_regression(tUserRating,GLCM)
+    print "EHD"
+    print linear_regression(EHDu,EHD)
+    print "GF"
+    print linear_regression(GFu,GF)
+    print "GLCM"
+    print linear_regression(GLCMu,GLCM)
     return 
 
 
