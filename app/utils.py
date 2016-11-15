@@ -15,7 +15,7 @@ else:
 def get_tree(remember={}):
     # Memoize tree, using the fact that kwargs only get instantiated once
     if not remember.get('tree'):
-        with open('./data/extracted.pickle', 'rb') as f:
+        with open('./data/extracted.pickle', 'r') as f:
             if version == 2:
                 remember['tree'] = pickle.load(f)
             else:
