@@ -37,12 +37,18 @@
   }
   .flexrow {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
   }
   .flexrow > * {
     flex-grow: 0;
     margin: 10px;
+  }
+  .pntng:hover {
+    /* Nice hover effect */
+    opacity: .5;
+    transition: opacity .2s ease-in-out;
+    cursor: pointer;
   }
   /*.imgframe {
     padding-left: 20%;
@@ -76,7 +82,7 @@
         <div class="grid">
           <div class="grid-sizer"></div>
           <div v-for="(painting, index) in paintings" class="grid-item">
-            <img v-on:click="showModal" v-bind:data-localindex="index" v-bind:src="painting.afbeelding" class="portfoliothumbnail">
+            <img v-on:click="showModal" v-bind:data-localindex="index" v-bind:src="painting.afbeelding" class="portfoliothumbnail pntng">
           </div>
         </div>
   <div class="modal fade" id="paintingmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -89,19 +95,23 @@
           <h4 class="modal-title img-responsive" id="myModalLabel">Related images</h4>
         </div>
         <div class="modal-body">
-          <div class="center-block">
+          <div style="text-align:center;">
             <img v-if="selectedpainting" v-bind:src="selectedpainting.afbeelding" class="img-fluid">
           </div>
-          <span style="text-align:center;width=100%;margin:10px;">Related images</span>
+
+          <div style="text-align:center;width=100%;margin:10px;">
+          <a class="btn btn-primary" href="https://docs.google.com/forms/d/e/1FAIpQLSdkpM1btamx6vQj5thC4YjVUgcudOf2Na6Yal3yt7ukgBUfNw/viewform">
+            Go to questionnaire</a>
+          </div>
+          <div style="text-align:center;width=100%;margin:10px;">Related images</div>
           <div class="flexrow">
-            <div v-if="selectedpainting" v-for="(painting, index) in relatedpaintings">
-              <img v-on:click="showModal" v-bind:data-localindex="index" v-bind:src="painting.afbeelding" class="img-fluid">
+            <div v-show="!relatedpaintings" style="text-align:center;width=100%;">
+              <img src="/static/spiffygif.gif"/>
+            </div>
+            <div v-if="relatedpaintings" v-for="(painting, index) in relatedpaintings">
+              <img v-on:click="showModal" v-bind:data-localindex="index" v-bind:src="painting.afbeelding" class="img-fluid pntng">
             </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Save changes</button>
         </div>
       </div>
     </div>
@@ -164,6 +174,8 @@ function ready() {
           var p = this.relatedpaintings;
         }
         this.selectedpainting = p[$(ev.target).data('localindex')];
+        // Show waiting thing
+        this.relatedpaintings = null;
         this.getRelatedPaintings(this.selectedpainting);
         $('#paintingmodal').modal('show');
       },

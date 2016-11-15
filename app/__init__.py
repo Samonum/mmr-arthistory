@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def intro():
-    return render_template('intro.html')
+    return render_template('intro_show.html')
 
 # In production this is handled by nginx
 if environ['FLASK_DEBUG']:
