@@ -14,7 +14,7 @@ def intro():
     return render_template('intro_show.html')
 
 # In production this is handled by nginx
-if environ['FLASK_DEBUG']:
+if environ.get('FLASK_DEBUG'):
     @app.route('/schilderijen/<path:p>')
     def sendpainting(p):
         return send_file('../data/schilderijen/'+p)
