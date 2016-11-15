@@ -3,9 +3,11 @@ Description=Circus process manager
 After=syslog.target network.target nss-lookup.target
 
 [Service]
+User=root
 Type=simple
+WorkingDirectory=/root/mmr-arthistory
 ExecReload=/usr/bin/circusctl reload
-ExecStart=/usr/bin/circusd /etc/circus/circus.ini
+ExecStart=/usr/bin/circusd /root/mmr-arthistory/circus.ini
 Restart=always
 RestartSec=5
 
