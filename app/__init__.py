@@ -5,12 +5,26 @@ version = sys.version_info.major
 # calculate features with opencv. (routes.py is incompatible)
 # if version == 3:
 from flask import Flask, send_file, json, render_template
+from os import environ
 
 app = Flask(__name__)
 
 @app.route('/')
 def intro():
     return render_template('intro.html')
+
+# In production this is handled by nginx
+if environ['FLASK_DEBUG']:
+    @app.route('/schilderijen/<path:p>')
+    def sendpainting(p):
+        return send_file('../data/schilderijen/'+p)
+
+    import logging, sys
+    rootlogger = logging.getLogger()
+    rootlogger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.DEBUG)
+    rootlogger.addHandler(ch)
 
 @app.route('/thanks')
 def thanks():

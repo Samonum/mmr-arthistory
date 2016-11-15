@@ -54,9 +54,11 @@ def copylistdict(a, b, *names):
 @api.route("/get_all_paintings")
 def get_all_paintings():
     tree = get_tree()
+    for i, p in enumerate(tree):
+        p['index'] = i
     # prune for important information, avoid sending whole thing over the wire
     out = []
-    copylistdict(tree, out, 'titel', 'afbeelding')
+    copylistdict(tree, out, 'titel', 'afbeelding', 'index')
     return json.dumps(out)
 
 @api.route("/get_random_painting")
@@ -107,6 +109,36 @@ def get_similar_painting():
     # Add distance to json obj for later analysis
     return json.dumps(dict(((k,v) for (k,v) in t[similarimgindex].items() if k != 'features'),
                       dist=mindist, feature=feature, index=similarimgindex, random=selectrandom))
+
+@api.route("/get_similar_paintings/<int:n>", methods=["POST"])
+def get_similar_paintings(n):
+    # Return random painting every once in a while for spread
+    js = request.get_json()
+    t = get_tree()
+    # Get index that we added at get_random_painting()
+    mainimgindex = js['index']
+    # Calculate distance to all other paintings
+    feature = "ColorBitmap"
+    distlist = [None] * len(t)
+    feat1 = t[mainimgindex]['features'][feature]
+    t1 = c()
+    for i, img in enumerate(t):
+        feat2 = img['features'][feature]
+        # TODO: change dists
+        d = dist(feature, feat1, feat2)
+        distlist[i] = d
+        # Distance to itself is 0 of course
+        if mainimgindex==i: distlist[i] = float('inf')
+    t2 = c()
+    # Return best n
+    similarimgindexes = sorted(enumerate(distlist), key=lambda x: x[1])[:n]
+    time = t2-t1
+    logger.info("Calculated distance from painting #{} for feature {} to all other paintings in {:.4f}s, chose #{}"
+    .format(mainimgindex, feature, time, similarimgindexes))
+    # Add distance to json obj for later analysis
+    return json.dumps(list(dict((k,v) for (k,v) in t[similarimgindex].items()
+                                  if k != 'features')
+                      for similarimgindex, _ in similarimgindexes))
 
 @api.route("/vote", methods=["POST"])
 def vote():

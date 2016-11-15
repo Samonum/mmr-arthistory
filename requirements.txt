@@ -7,3 +7,6 @@ SimpleCV
 pygame
 numpy
 scikit-image
+
+meinheld
+pymongo
